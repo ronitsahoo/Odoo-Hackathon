@@ -57,7 +57,7 @@ export default function EditAsset() {
         // Pre-fill form
         setForm({
           name: assetData.name,
-          category: assetData.category._id,
+          category: assetData.category?._id || assetData.category || '',
           serialNumber: assetData.serialNumber || '',
           acquisitionDate: assetData.acquisitionDate
             ? new Date(assetData.acquisitionDate).toISOString().split('T')[0]
@@ -66,13 +66,15 @@ export default function EditAsset() {
           condition: assetData.condition || '',
           location: assetData.location || '',
           department: assetData.department?._id || '',
-          isBookable: assetData.isBookable,
-          customFieldValues: assetData.customFieldValues
-            ? Object.fromEntries(assetData.customFieldValues)
-            : {},
+          isBookable: assetData.isBookable || false,
+          customFieldValues:
+            assetData.customFieldValues && typeof assetData.customFieldValues === 'object'
+              ? assetData.customFieldValues
+              : {},
         });
       } catch (err) {
-        toast.error('Failed to load asset');
+        console.error('Failed to load asset:', err);
+        toast.error(err.response?.data?.message || 'Failed to load asset');
         navigate('/assets');
       } finally {
         setLoading(false);

@@ -13,9 +13,14 @@ import * as asset from '../controllers/asset.controller.js';
  */
 const router = Router();
 
-const assetRules = [
+const assetCreateRules = [
   body('name').trim().notEmpty().withMessage('Asset name is required'),
   body('category').trim().notEmpty().withMessage('Category is required'),
+];
+
+const assetUpdateRules = [
+  body('name').optional().trim().notEmpty().withMessage('Asset name is required'),
+  body('category').optional().trim().notEmpty().withMessage('Category is required'),
 ];
 
 // --- Asset collection ---
@@ -25,7 +30,7 @@ router.post(
   protect,
   requireRole('asset_manager', 'admin'),
   upload.array('photos', 10),
-  assetRules,
+  assetCreateRules,
   validate,
   asset.createAsset
 );
@@ -37,7 +42,7 @@ router.patch(
   protect,
   requireRole('asset_manager', 'admin'),
   upload.array('photos', 10),
-  assetRules,
+  assetUpdateRules,
   validate,
   asset.updateAsset
 );

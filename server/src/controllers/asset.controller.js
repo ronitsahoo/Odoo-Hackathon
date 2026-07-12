@@ -173,7 +173,9 @@ export const updateAsset = asyncHandler(async (req, res) => {
   if (customFieldValues) {
     const parsed =
       typeof customFieldValues === 'string' ? safeJson(customFieldValues) : customFieldValues;
-    asset.customFieldValues = new Map({ ...Object.fromEntries(asset.customFieldValues), ...parsed });
+    // Convert existing Map to object, merge with new values, convert back to Map
+    const existing = asset.customFieldValues ? Object.fromEntries(asset.customFieldValues) : {};
+    asset.customFieldValues = { ...existing, ...parsed };
   }
 
   // Handle photo removal + new uploads
