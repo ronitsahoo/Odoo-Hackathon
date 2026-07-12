@@ -1,13 +1,17 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { LogIn } from 'lucide-react';
 import { useAuthStore } from '../store/authStore.js';
 import Card from '../components/ui/Card.jsx';
 import Input from '../components/ui/Input.jsx';
 import Button from '../components/ui/Button.jsx';
 
-/** Login page with client-side validation matching the server rules. */
+/**
+ * AssetFlow auth screen (Screen 1). One card: login fields on top, then a
+ * divider and a "New here?" section that sends people to registration.
+ * Purely presentational changes — login still POSTs to /auth/login and the
+ * Create Account button routes to the existing /register flow.
+ */
 export default function Login() {
   const { login, apiError } = useAuthStore();
   const navigate = useNavigate();
@@ -41,14 +45,16 @@ export default function Login() {
   return (
     <div className="mx-auto max-w-md py-10">
       <Card>
+        {/* Brand + title */}
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-100 text-brand-600">
-            <LogIn size={22} />
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-brand-600 text-sm font-bold tracking-wide text-white">
+            AF
           </div>
-          <h1 className="text-xl font-bold text-slate-800">Log in</h1>
-          <p className="text-sm text-slate-500">Welcome back to OdooHack.</p>
+          <h1 className="text-xl font-bold text-slate-800">AssetFlow — login</h1>
+          <p className="text-sm text-slate-500">Sign in to your workspace.</p>
         </div>
 
+        {/* Login fields */}
         <form onSubmit={onSubmit} className="space-y-4" noValidate>
           <Input
             label="Email"
@@ -57,33 +63,48 @@ export default function Login() {
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
             error={errors.email}
-            placeholder="you@example.com"
+            placeholder="name@company.com"
           />
-          <Input
-            label="Password"
-            name="password"
-            type="password"
-            value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-            error={errors.password}
-            placeholder="••••••••"
-          />
+          <div>
+            <Input
+              label="Password"
+              name="password"
+              type="password"
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              error={errors.password}
+              placeholder="••••••••"
+            />
+            <div className="mt-1 text-right">
+              {/* Visual stub — no reset flow yet. */}
+              <button
+                type="button"
+                onClick={() => toast('Password reset isn’t available yet — contact an admin.')}
+                className="text-sm font-medium text-brand-600 hover:underline"
+              >
+                Forgot password?
+              </button>
+            </div>
+          </div>
           <Button type="submit" loading={loading} className="w-full">
             Log in
           </Button>
         </form>
 
-        <p className="mt-4 text-center text-sm text-slate-500">
-          No account?{' '}
-          <Link to="/register" className="font-medium text-brand-600 hover:underline">
-            Sign up
-          </Link>
-        </p>
+        {/* Divider */}
+        <div className="my-6 border-t border-slate-200" />
 
-        <div className="mt-4 rounded-lg bg-slate-50 p-3 text-xs text-slate-500">
-          <p className="font-medium text-slate-600">Demo accounts</p>
-          <p>admin@demo.com / admin1234</p>
-          <p>demo@demo.com / demo1234</p>
+        {/* Create-account section */}
+        <div className="space-y-3 text-center">
+          <div>
+            <h2 className="font-semibold text-slate-800">New here?</h2>
+            <p className="text-sm text-slate-500">
+              Sign up creates an employee account — admin roles assigned later.
+            </p>
+          </div>
+          <Button variant="secondary" className="w-full" onClick={() => navigate('/register')}>
+            Create Account
+          </Button>
         </div>
       </Card>
     </div>

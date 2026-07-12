@@ -11,9 +11,7 @@ router.use(protect, requireRole('admin'));
 
 router.get('/stats', admin.getStats);
 
-router.get('/users', admin.listUsers);
-router.patch('/users/:id/ban', body('isBanned').isBoolean(), validate, admin.setBan);
-router.patch('/users/:id/role', body('role').isIn(['user', 'admin']), validate, admin.setRole);
+// User management moved to /api/users in Module 1 (role/status admin API).
 
 router.get('/moderation', admin.listModerationQueue);
 router.patch(

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { UserPlus } from 'lucide-react';
 import { useAuthStore } from '../store/authStore.js';
 import Card from '../components/ui/Card.jsx';
 import Input from '../components/ui/Input.jsx';
@@ -43,11 +42,13 @@ export default function Register() {
     <div className="mx-auto max-w-md py-10">
       <Card>
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-100 text-brand-600">
-            <UserPlus size={22} />
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-brand-600 text-sm font-bold tracking-wide text-white">
+            AF
           </div>
-          <h1 className="text-xl font-bold text-slate-800">Create account</h1>
-          <p className="text-sm text-slate-500">Join OdooHack in seconds.</p>
+          <h1 className="text-xl font-bold text-slate-800">AssetFlow — create account</h1>
+          <p className="text-sm text-slate-500">
+            Sign up creates an employee account — admin roles assigned later.
+          </p>
         </div>
 
         <form onSubmit={onSubmit} className="space-y-4" noValidate>

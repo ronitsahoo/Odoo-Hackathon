@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/authStore.js';
 
 import Layout from './components/layout/Layout.jsx';
@@ -13,8 +13,10 @@ import ItemDetail from './pages/ItemDetail.jsx';
 import CreateEditItem from './pages/CreateEditItem.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Profile from './pages/Profile.jsx';
+import Placeholder from './pages/Placeholder.jsx';
 import AdminDashboard from './pages/admin/AdminDashboard.jsx';
-import AdminUsers from './pages/admin/AdminUsers.jsx';
+import OrganizationSetup from './pages/admin/OrganizationSetup.jsx';
+import EmployeeDirectory from './pages/admin/EmployeeDirectory.jsx';
 import AdminModeration from './pages/admin/AdminModeration.jsx';
 import AdminBroadcast from './pages/admin/AdminBroadcast.jsx';
 import NotFound from './pages/NotFound.jsx';
@@ -73,6 +75,27 @@ export default function App() {
           }
         />
 
+        {/* AssetFlow modules not yet built — placeholders so nav never dead-links. */}
+        {[
+          { path: '/assets', title: 'Assets' },
+          { path: '/allocation', title: 'Allocation & Transfer' },
+          { path: '/booking', title: 'Resource Booking' },
+          { path: '/maintenance', title: 'Maintenance' },
+          { path: '/audit', title: 'Audit' },
+          { path: '/reports', title: 'Reports' },
+          { path: '/notifications', title: 'Notifications' },
+        ].map(({ path, title }) => (
+          <Route
+            key={path}
+            path={path}
+            element={
+              <ProtectedRoute>
+                <Placeholder title={title} />
+              </ProtectedRoute>
+            }
+          />
+        ))}
+
         {/* Admin */}
         <Route
           path="/admin"
@@ -82,14 +105,18 @@ export default function App() {
             </RoleRoute>
           }
         />
+        {/* Organization setup (Module 2 home): admin-only, Employee tab inside. */}
         <Route
-          path="/admin/users"
+          path="/admin/organization"
           element={
-            <RoleRoute>
-              <AdminUsers />
+            <RoleRoute roles={['admin']}>
+              <OrganizationSetup />
             </RoleRoute>
           }
-        />
+        >
+          <Route index element={<Navigate to="employees" replace />} />
+          <Route path="employees" element={<EmployeeDirectory />} />
+        </Route>
         <Route
           path="/admin/moderation"
           element={

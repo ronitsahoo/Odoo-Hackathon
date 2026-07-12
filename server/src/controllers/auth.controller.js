@@ -10,7 +10,9 @@ export const register = asyncHandler(async (req, res) => {
   const exists = await User.findOne({ email });
   if (exists) throw new ApiError(409, 'That email is already registered');
 
-  const user = await User.create({ name, email, password });
+  // Force privilege server-side: signups are always an active 'employee'.
+  // Any role/status sent by the client is ignored — no self-promotion.
+  const user = await User.create({ name, email, password, role: 'employee', status: 'active' });
   const token = generateToken(user._id);
 
   res.status(201).json({ success: true, data: { user, token } });
@@ -27,6 +29,9 @@ export const login = asyncHandler(async (req, res) => {
   const ok = await user.comparePassword(password);
   if (!ok) throw new ApiError(401, 'Invalid email or password');
   if (user.isBanned) throw new ApiError(403, 'Your account has been banned');
+  if (user.status !== 'active') {
+    throw new ApiError(403, 'Account deactivated — contact an admin');
+  }
 
   const token = generateToken(user._id);
   res.json({ success: true, data: { user, token } });

@@ -1,79 +1,100 @@
 import { NavLink } from 'react-router-dom';
-import { Home, LayoutDashboard, Plus, User, Shield, Users, ShieldCheck, Megaphone, X } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Building2,
+  Boxes,
+  ArrowLeftRight,
+  CalendarClock,
+  Wrench,
+  ClipboardList,
+  BarChart3,
+  Bell,
+  X,
+} from 'lucide-react';
 import { useAuthStore } from '../../store/authStore.js';
 
 /**
- * Mobile drawer navigation (hidden on md+, where the Navbar carries the links).
- * Role-aware: admin links only render for admins.
+ * Primary AssetFlow navigation. Persistent column on md+, slide-in drawer on
+ * mobile. Role-aware: admin-only items are filtered out for everyone else.
+ * "Employee" is not a top-level entry — it lives as a tab inside Organization
+ * setup (see pages/admin/OrganizationSetup.jsx).
  */
+const NAV = [
+  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/admin/organization', label: 'Organization setup', icon: Building2, adminOnly: true },
+  { to: '/assets', label: 'Assets', icon: Boxes },
+  { to: '/allocation', label: 'Allocation & Transfer', icon: ArrowLeftRight },
+  { to: '/booking', label: 'Resource Booking', icon: CalendarClock },
+  { to: '/maintenance', label: 'Maintenance', icon: Wrench },
+  { to: '/audit', label: 'Audit', icon: ClipboardList },
+  { to: '/reports', label: 'Reports', icon: BarChart3 },
+  { to: '/notifications', label: 'Notifications', icon: Bell },
+];
+
+const linkCls = ({ isActive }) =>
+  `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
+    isActive ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100'
+  }`;
+
+/** The nav list, shared by the desktop column and the mobile drawer. */
+function NavList({ items, onNavigate }) {
+  return (
+    <nav className="flex flex-col gap-1" onClick={onNavigate}>
+      {items.map(({ to, label, icon: Icon }) => (
+        <NavLink key={to} to={to} className={linkCls}>
+          <Icon size={18} /> {label}
+        </NavLink>
+      ))}
+    </nav>
+  );
+}
+
+/** AssetFlow wordmark used at the top of both variants. */
+function Brand() {
+  return (
+    <div className="flex items-center gap-2 font-bold text-slate-900">
+      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">
+        AF
+      </span>
+      AssetFlow
+    </div>
+  );
+}
+
 export default function Sidebar({ open, onClose }) {
   const { user, isAdmin } = useAuthStore();
 
-  const item = ({ isActive }) =>
-    `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium ${
-      isActive ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100'
-    }`;
+  // Only signed-in users see the app nav; admin-only items are gated by role.
+  const items = user ? NAV.filter((i) => !i.adminOnly || isAdmin()) : [];
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Desktop: persistent column */}
+      {items.length > 0 && (
+        <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-60 shrink-0 overflow-y-auto border-r border-slate-200 bg-white px-3 py-4 md:block">
+          <NavList items={items} />
+        </aside>
+      )}
+
+      {/* Mobile: slide-in drawer */}
       <div
         className={`fixed inset-0 z-40 bg-black/30 transition-opacity md:hidden ${
           open ? 'opacity-100' : 'pointer-events-none opacity-0'
         }`}
         onClick={onClose}
       />
-      {/* Drawer */}
       <aside
         className={`fixed left-0 top-0 z-50 h-full w-64 transform bg-white p-4 shadow-xl transition-transform md:hidden ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className="mb-4 flex items-center justify-between">
-          <span className="font-bold text-slate-900">Menu</span>
+          <Brand />
           <button onClick={onClose} className="rounded-lg p-1.5 hover:bg-slate-100">
             <X size={18} />
           </button>
         </div>
-
-        <nav className="flex flex-col gap-1" onClick={onClose}>
-          <NavLink to="/" className={item} end>
-            <Home size={18} /> Browse
-          </NavLink>
-          {user && (
-            <>
-              <NavLink to="/dashboard" className={item}>
-                <LayoutDashboard size={18} /> Dashboard
-              </NavLink>
-              <NavLink to="/items/new" className={item}>
-                <Plus size={18} /> Create item
-              </NavLink>
-              <NavLink to="/profile" className={item}>
-                <User size={18} /> Profile
-              </NavLink>
-            </>
-          )}
-
-          {isAdmin() && (
-            <>
-              <div className="mt-3 px-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                Admin
-              </div>
-              <NavLink to="/admin" className={item} end>
-                <Shield size={18} /> Dashboard
-              </NavLink>
-              <NavLink to="/admin/moderation" className={item}>
-                <ShieldCheck size={18} /> Moderation
-              </NavLink>
-              <NavLink to="/admin/users" className={item}>
-                <Users size={18} /> Users
-              </NavLink>
-              <NavLink to="/admin/broadcast" className={item}>
-                <Megaphone size={18} /> Broadcast
-              </NavLink>
-            </>
-          )}
-        </nav>
+        <NavList items={items} onNavigate={onClose} />
       </aside>
     </>
   );

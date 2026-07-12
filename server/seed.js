@@ -24,6 +24,8 @@ async function seed() {
   ]);
 
   // --- Users (password hashing happens in the User pre-save hook) ---
+  // One of every role + a deactivated employee, so RBAC and the status gate
+  // both have something to demonstrate. Department stays null until Module 2.
   const admin = await User.create({
     name: 'Admin',
     email: 'admin@demo.com',
@@ -31,19 +33,43 @@ async function seed() {
     role: 'admin',
     bio: 'Platform administrator.',
   });
+  const manager = await User.create({
+    name: 'Maya Manager',
+    email: 'manager@demo.com',
+    password: 'manager1234',
+    role: 'asset_manager',
+    bio: 'Keeps the asset catalogue in order.',
+  });
+  const head = await User.create({
+    name: 'Devi Head',
+    email: 'head@demo.com',
+    password: 'head1234',
+    role: 'dept_head',
+    bio: 'Runs a department.',
+  });
   const demo = await User.create({
     name: 'Demo User',
     email: 'demo@demo.com',
     password: 'demo1234',
+    role: 'employee',
     bio: 'Just here to test the template.',
   });
   const priya = await User.create({
     name: 'Priya Sharma',
     email: 'priya@demo.com',
     password: 'priya1234',
+    role: 'employee',
     bio: 'Builds things at hackathons.',
   });
-  console.log('✓ users: admin@demo.com / demo@demo.com / priya@demo.com');
+  await User.create({
+    name: 'Sam Inactive',
+    email: 'inactive@demo.com',
+    password: 'inactive1234',
+    role: 'employee',
+    status: 'inactive', // cannot log in until an admin reactivates
+    bio: 'Deactivated account for testing the status gate.',
+  });
+  console.log('✓ 6 users (admin, asset_manager, dept_head, 3 employees; 1 inactive)');
 
   // --- Items (mix of statuses so moderation queue + Home both have content) ---
   const items = await Item.create([
@@ -117,9 +143,12 @@ async function seed() {
   console.log('✓ 1 request + 1 notification');
 
   console.log('\n=== SEED COMPLETE ===');
-  console.log('Admin : admin@demo.com / admin1234');
-  console.log('User  : demo@demo.com  / demo1234');
-  console.log('User  : priya@demo.com / priya1234');
+  console.log('Admin         : admin@demo.com   / admin1234');
+  console.log('Asset manager : manager@demo.com / manager1234');
+  console.log('Dept head     : head@demo.com    / head1234');
+  console.log('Employee      : demo@demo.com    / demo1234');
+  console.log('Employee      : priya@demo.com   / priya1234');
+  console.log('Employee (inactive, cannot log in): inactive@demo.com / inactive1234');
 
   await mongoose.connection.close();
   process.exit(0);

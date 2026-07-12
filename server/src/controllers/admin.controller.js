@@ -29,35 +29,6 @@ export const getStats = asyncHandler(async (req, res) => {
   });
 });
 
-/** GET /api/admin/users -> all users (for the management table). */
-export const listUsers = asyncHandler(async (req, res) => {
-  const users = await User.find().sort({ createdAt: -1 });
-  res.json({ success: true, data: { users } });
-});
-
-/** PATCH /api/admin/users/:id/ban  body { isBanned } -> ban/unban. */
-export const setBan = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.id);
-  if (!user) throw new ApiError(404, 'User not found');
-  if (user._id.toString() === req.user._id.toString()) {
-    throw new ApiError(400, 'You cannot ban yourself');
-  }
-  user.isBanned = Boolean(req.body.isBanned);
-  await user.save();
-  res.json({ success: true, data: { user } });
-});
-
-/** PATCH /api/admin/users/:id/role  body { role } -> change role. */
-export const setRole = asyncHandler(async (req, res) => {
-  const { role } = req.body;
-  if (!['user', 'admin'].includes(role)) throw new ApiError(400, 'Invalid role');
-  const user = await User.findById(req.params.id);
-  if (!user) throw new ApiError(404, 'User not found');
-  user.role = role;
-  await user.save();
-  res.json({ success: true, data: { user } });
-});
-
 /** GET /api/admin/moderation -> the queue of pending items. */
 export const listModerationQueue = asyncHandler(async (req, res) => {
   const items = await Item.find({ status: 'pending' })

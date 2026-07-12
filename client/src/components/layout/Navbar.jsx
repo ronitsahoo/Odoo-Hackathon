@@ -1,18 +1,17 @@
-import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Menu, LayoutGrid, Plus, LogOut, User as UserIcon, Shield } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Menu, Plus, LogOut, User as UserIcon, Shield } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore.js';
 import NotificationBell from '../NotificationBell.jsx';
 import { btn } from '../../lib/ui.js';
 
-/** Top navigation with a role-aware menu. `onMenu` opens the mobile sidebar. */
+/**
+ * Top bar. Primary navigation lives in the Sidebar now; this keeps the brand,
+ * the mobile menu toggle, and per-user actions (create / bell / profile).
+ * `onMenu` opens the mobile sidebar drawer.
+ */
 export default function Navbar({ onMenu }) {
   const { user, logout, isAdmin } = useAuthStore();
   const navigate = useNavigate();
-
-  const linkCls = ({ isActive }) =>
-    `hidden sm:inline-flex text-sm font-medium ${
-      isActive ? 'text-brand-600' : 'text-slate-600 hover:text-slate-900'
-    }`;
 
   function handleLogout() {
     logout();
@@ -28,25 +27,11 @@ export default function Navbar({ onMenu }) {
         </button>
 
         <Link to="/" className="flex items-center gap-2 font-bold text-slate-900">
-          <LayoutGrid className="text-brand-600" size={22} />
-          <span className="hidden sm:inline">OdooHack</span>
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">
+            AF
+          </span>
+          <span className="hidden sm:inline">AssetFlow</span>
         </Link>
-
-        <nav className="ml-4 flex items-center gap-4">
-          <NavLink to="/" className={linkCls} end>
-            Browse
-          </NavLink>
-          {user && (
-            <NavLink to="/dashboard" className={linkCls}>
-              Dashboard
-            </NavLink>
-          )}
-          {isAdmin() && (
-            <NavLink to="/admin" className={linkCls}>
-              Admin
-            </NavLink>
-          )}
-        </nav>
 
         <div className="ml-auto flex items-center gap-2">
           {user ? (

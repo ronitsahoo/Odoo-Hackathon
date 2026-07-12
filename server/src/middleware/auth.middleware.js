@@ -22,6 +22,10 @@ export const protect = asyncHandler(async (req, res, next) => {
   const user = await User.findById(payload.id);
   if (!user) throw new ApiError(401, 'User no longer exists');
   if (user.isBanned) throw new ApiError(403, 'Your account has been banned');
+  // Re-check status every request so mid-session deactivation takes effect.
+  if (user.status !== 'active') {
+    throw new ApiError(403, 'Account deactivated — contact an admin');
+  }
 
   req.user = user;
   next();

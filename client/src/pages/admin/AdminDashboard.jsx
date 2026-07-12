@@ -86,7 +86,7 @@ export default function AdminDashboard() {
       {/* Quick links */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <QuickLink to="/admin/moderation" icon={ShieldCheck} title="Moderation queue" hint="Approve or reject pending items" />
-        <QuickLink to="/admin/users" icon={Users} title="Manage users" hint="Ban / unban, change roles" />
+        <QuickLink to="/admin/organization" icon={Users} title="Organization setup" hint="Employee directory: promote roles, activate / deactivate" />
         <QuickLink to="/admin/broadcast" icon={Megaphone} title="Broadcast" hint="Notify every user at once" />
       </div>
     </div>
