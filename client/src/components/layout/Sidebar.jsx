@@ -52,11 +52,12 @@ function NavList({ items, onNavigate }) {
 /** AssetFlow wordmark used at the top of both variants. */
 function Brand() {
   return (
-    <div className="flex items-center gap-2 font-bold text-slate-900">
-      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">
-        AF
-      </span>
-      AssetFlow
+    <div className="flex items-center">
+      <img 
+        src="/images/assetflow-logo.png" 
+        alt="AssetFlow" 
+        className="h-16"
+      />
     </div>
   );
 }

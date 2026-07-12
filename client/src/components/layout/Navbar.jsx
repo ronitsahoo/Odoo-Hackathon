@@ -26,11 +26,12 @@ export default function Navbar({ onMenu }) {
           <Menu size={20} />
         </button>
 
-        <Link to="/" className="flex items-center gap-2 font-bold text-slate-900">
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">
-            AF
-          </span>
-          <span className="hidden sm:inline">AssetFlow</span>
+        <Link to="/" className="flex items-center gap-3">
+          <img 
+            src="/images/assetflow-logo.png" 
+            alt="AssetFlow" 
+            className="h-20 md:h-24"
+          />
         </Link>
 
         <div className="ml-auto flex items-center gap-3">
