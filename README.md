@@ -23,7 +23,7 @@ you keep what maps to the PS, rename it, delete the rest, and only write theme-s
     `Get-Service *mongo*`. If stopped: `net start MongoDB`.
   - **macOS (Homebrew):** `brew services start mongodb-community`
   - **Linux:** `sudo systemctl start mongod`
-  - **Docker (any OS):** `docker run -d -p 27017:27017 --name mongo mongo:7`
+  - **Docker(any OS):** `docker run -d -p 27017:27017 --name mongo mongo:7`
   - **No local Mongo?** Create a free cluster at [mongodb.com/atlas](https://www.mongodb.com/atlas),
     then set `MONGODB_URI` in `server/.env` to your Atlas connection string — no code changes.
 
