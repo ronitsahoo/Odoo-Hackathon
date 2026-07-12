@@ -1,4 +1,4 @@
-# Odoo Hackathon MERN Template
+# Odoo - AssetFlow
 
 A production-quality **MERN** skeleton built for the Odoo hackathon's *surprise* problem
 statement. Every past theme (StackIt Q&A, Skill Swap, ReWear, QuickDesk, CivicTrack, Expense
