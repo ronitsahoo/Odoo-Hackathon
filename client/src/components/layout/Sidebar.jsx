@@ -32,7 +32,7 @@ const NAV = [
 ];
 
 const linkCls = ({ isActive }) =>
-  `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
+  `flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition ${
     isActive ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100'
   }`;
 
@@ -71,7 +71,7 @@ export default function Sidebar({ open, onClose }) {
     <>
       {/* Desktop: persistent column */}
       {items.length > 0 && (
-        <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-60 shrink-0 overflow-y-auto border-r border-slate-200 bg-white px-3 py-4 md:block">
+        <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-64 shrink-0 overflow-y-auto border-r border-slate-200 bg-white px-4 py-6 md:block">
           <NavList items={items} />
         </aside>
       )}

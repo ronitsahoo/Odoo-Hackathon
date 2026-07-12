@@ -22,10 +22,12 @@ export default function Layout() {
   return (
     <div className="min-h-screen bg-slate-50">
       <Navbar onMenu={() => setMenuOpen(true)} />
-      <div className="mx-auto flex w-full max-w-6xl">
+      <div className="flex w-full">
         <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
-        <main className="min-w-0 flex-1 px-4 py-6">
-          <Outlet />
+        <main className="min-w-0 flex-1 px-4 py-6 md:px-8 lg:px-12">
+          <div className="mx-auto max-w-7xl">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

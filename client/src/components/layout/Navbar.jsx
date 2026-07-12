@@ -20,7 +20,7 @@ export default function Navbar({ onMenu }) {
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4">
+      <div className="flex h-14 items-center gap-4 px-4 md:px-6 lg:px-8">
         {/* Mobile menu toggle */}
         <button onClick={onMenu} className="rounded-lg p-2 hover:bg-slate-100 md:hidden">
           <Menu size={20} />
@@ -33,7 +33,7 @@ export default function Navbar({ onMenu }) {
           <span className="hidden sm:inline">AssetFlow</span>
         </Link>
 
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-3">
           {user ? (
             <>
               <Link to="/items/new" className={`${btn.base} ${btn.primary} ${btn.sm}`}>
@@ -42,7 +42,7 @@ export default function Navbar({ onMenu }) {
               <NotificationBell />
               <Link
                 to="/profile"
-                className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-slate-100"
+                className="flex items-center gap-2 rounded-lg px-3 py-1.5 hover:bg-slate-100"
               >
                 <Avatar user={user} />
                 <span className="hidden text-sm font-medium text-slate-700 lg:inline">
