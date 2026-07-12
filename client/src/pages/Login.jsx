@@ -47,8 +47,12 @@ export default function Login() {
       <Card>
         {/* Brand + title */}
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-brand-600 text-sm font-bold tracking-wide text-white">
-            AF
+          <div className="mx-auto mb-3 flex h-20 w-20 items-center justify-center">
+            <img 
+              src="/images/af.png" 
+              alt="AssetFlow" 
+              className="h-full w-full object-contain"
+            />
           </div>
           <h1 className="text-xl font-bold text-slate-800">AssetFlow — login</h1>
           <p className="text-sm text-slate-500">Sign in to your workspace.</p>
