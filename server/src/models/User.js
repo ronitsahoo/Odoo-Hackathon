@@ -21,7 +21,7 @@ const userSchema = new mongoose.Schema(
     },
     password: { type: String, required: true, minlength: 6, select: false },
     role: { type: String, enum: ROLES, default: 'employee' },
-    // Nullable; Module 2 (Departments) fills this in.
+    // Nullable; set when the user is assigned to a department.
     department: { type: mongoose.Schema.Types.ObjectId, ref: 'Department', default: null },
     // Account gate: an admin can deactivate a user to block sign-in.
     status: { type: String, enum: ['active', 'inactive'], default: 'active' },

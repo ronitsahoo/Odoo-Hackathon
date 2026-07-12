@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 /**
- * MaintenanceRequest: a repair/service ticket on an asset (Module 5).
+ * MaintenanceRequest: a repair/service ticket on an asset.
  * Cloned from the Request workflow pattern; drives the kanban board.
  * Flow: Pending -> Approved -> Technician Assigned -> In Progress -> Resolved
  *       (Pending -> Rejected is a dead end). Approving/resolving flips the

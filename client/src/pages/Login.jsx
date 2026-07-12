@@ -7,7 +7,7 @@ import Input from '../components/ui/Input.jsx';
 import Button from '../components/ui/Button.jsx';
 
 /**
- * AssetFlow auth screen (Screen 1). One card: login fields on top, then a
+ * AssetFlow auth screen. One card: login fields on top, then a
  * divider and a "New here?" section that sends people to registration.
  * Purely presentational changes — login still POSTs to /auth/login and the
  * Create Account button routes to the existing /register flow.

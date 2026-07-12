@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import api from '../api/axios.js';
 
 /**
- * Allocation store (Module 4): allocate / return an asset, fetch an asset's
+ * Allocation store: allocate / return an asset, fetch an asset's
  * allocation history, and load overdue allocations. Cloned from requestStore.
  * The 409 conflict is intentionally re-thrown so the page can render the red
  * "already allocated" banner instead of a generic toast.

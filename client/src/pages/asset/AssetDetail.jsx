@@ -9,8 +9,8 @@ import Loader from '../../components/ui/Loader.jsx';
 import api from '../../api/axios.js';
 
 /**
- * Asset Detail page (Module 3): shows all fields + custom field values +
- * empty sections for allocation/maintenance history (filled by Modules 4/5).
+ * Asset Detail page: shows all fields, custom field values, and
+ * allocation/maintenance history.
  */
 export default function AssetDetail() {
   const { id } = useParams();
@@ -135,7 +135,7 @@ export default function AssetDetail() {
         </div>
       )}
 
-      {/* Allocation History (populated by Module 4), newest first. */}
+      {/* Allocation History, newest first. */}
       <div className={`${card} ${cardPad}`}>
         <h2 className="mb-4 text-lg font-semibold text-slate-900">Allocation History</h2>
         {asset.allocationHistory?.length > 0 ? (
@@ -153,7 +153,7 @@ export default function AssetDetail() {
         )}
       </div>
 
-      {/* Maintenance History (populated by Module 5), newest first. */}
+      {/* Maintenance History, newest first. */}
       <div className={`${card} ${cardPad}`}>
         <h2 className="mb-4 text-lg font-semibold text-slate-900">Maintenance History</h2>
         {asset.maintenanceHistory?.length > 0 ? (

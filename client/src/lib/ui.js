@@ -43,7 +43,7 @@ export const statusColors = {
   accepted: 'bg-emerald-100 text-emerald-700',
   cancelled: 'bg-slate-100 text-slate-600',
   completed: 'bg-brand-100 text-brand-700',
-  // Asset lifecycle statuses (Module 3)
+  // Asset lifecycle statuses
   Available: 'bg-emerald-100 text-emerald-700',
   Allocated: 'bg-blue-100 text-blue-700',
   Reserved: 'bg-purple-100 text-purple-700',

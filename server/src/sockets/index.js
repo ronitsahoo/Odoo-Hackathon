@@ -40,10 +40,10 @@ export function initSockets(server, corsOrigin) {
     });
 
     io.on('connection', (socket) => {
-      // Everyone watches the shared assets feed (Module 3).
+      // Everyone watches the shared assets feed.
       socket.join('assets');
 
-      // Everyone watches the maintenance board feed (Module 5).
+      // Everyone watches the maintenance board feed.
       socket.join('maintenance');
 
       // Authenticated users get their private notification room.
@@ -74,21 +74,21 @@ export function getIO() {
 export const emitNotification = (userId, notification) =>
   getIO().to(`user:${userId}`).emit('notification:new', notification);
 
-// --- Asset emit helpers (Module 3) ---
+// --- Asset emit helpers ---
 export const emitAssetCreated = (asset) => getIO().to('assets').emit('asset:created', asset);
 export const emitAssetUpdated = (asset) => getIO().to('assets').emit('asset:updated', asset);
 export const emitAssetDeleted = (assetId) =>
   getIO().to('assets').emit('asset:deleted', { id: assetId.toString() });
 
-// --- Maintenance emit helpers (Module 5) ---
+// --- Maintenance emit helpers ---
 export const emitMaintenanceCreated = (mr) =>
   getIO().to('maintenance').emit('maintenance:created', mr);
 export const emitMaintenanceUpdated = (mr) =>
   getIO().to('maintenance').emit('maintenance:updated', mr);
 
-// --- Booking emit helpers (Module 7 / Booking) ---
+// --- Booking emit helpers ---
 export const emitBookingCreated = (b) => getIO().to('assets').emit('booking:created', b);
 export const emitBookingUpdated = (b) => getIO().to('assets').emit('booking:updated', b);
 
-// --- Activity feed (Module 6): signals the dashboard to refresh its feed. ---
+// --- Activity feed: signals the dashboard to refresh its feed. ---
 export const emitActivity = (log) => getIO().to('assets').emit('activity:new', log);

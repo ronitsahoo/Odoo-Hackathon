@@ -10,7 +10,7 @@ import { emitAssetUpdated } from '../sockets/index.js';
 
 /**
  * ============================================================================
- * ALLOCATION — assign / return custody of an asset (Module 4).
+ * ALLOCATION — assign / return custody of an asset.
  * The allocate path uses an ATOMIC findOneAndUpdate guard so an asset can only
  * be allocated while it is 'Available'. This is the conflict heart of AssetFlow:
  * two concurrent allocations can never both win.

@@ -9,7 +9,7 @@ import ImageUploader from '../../components/ImageUploader.jsx';
 import api from '../../api/axios.js';
 
 /**
- * Register Asset form (Module 3): name, category (reveals custom fields),
+ * Register Asset form: name, category (reveals custom fields),
  * serial, cost, condition, location, department, bookable, photos.
  * On success, show the assigned asset tag.
  */

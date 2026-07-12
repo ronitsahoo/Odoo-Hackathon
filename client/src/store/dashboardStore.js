@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import api from '../api/axios.js';
 
 /**
- * Dashboard store (Module 6): fetches KPIs, overdue, and recent activity.
+ * Dashboard store: fetches KPIs, overdue, and recent activity.
  */
 export const useDashboardStore = create((set) => ({
   summary: null,

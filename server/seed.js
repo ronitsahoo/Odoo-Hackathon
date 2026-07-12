@@ -110,7 +110,7 @@ async function seed() {
   await employee2.save();
   console.log('✓ Departments assigned to employees');
 
-  // --- Assets (Module 3) with varied statuses and locations ---
+  // --- Assets with varied statuses and locations ---
   await Counter.create({ _id: 'assetTag', seq: 11 });
 
   const assets = await Asset.create([
@@ -212,7 +212,7 @@ async function seed() {
       department: hq._id,
       status: 'Available',
       customFieldValues: {},
-      isBookable: true, // a bookable resource for Screen 6
+      isBookable: true, // a bookable resource
     },
     {
       name: 'Toyota Innova (Fleet)',
@@ -262,7 +262,7 @@ async function seed() {
   await Counter.updateOne({ _id: 'assetTag' }, { $set: { seq: 480 } });
   console.log('✓ Counter set past highest tag (AF-0480)');
 
-  // --- Allocations (Module 4) ---
+  // --- Allocations ---
   const dell = assets.find((a) => a.assetTag === 'AF-0012'); // held by employee1
   const desk = assets.find((a) => a.assetTag === 'AF-0154'); // held by employee2
   const chair = assets.find((a) => a.assetTag === 'AF-0201'); // Available
@@ -383,7 +383,7 @@ async function seed() {
   });
   console.log('✓ 1 pending transfer request (employee1 → employee2 on AF-0012)');
 
-  // --- Maintenance requests (Module 5) ---
+  // --- Maintenance requests ---
   const projector = assets.find((a) => a.assetTag === 'AF-0062');
   const printer = assets.find((a) => a.assetTag === 'AF-0089');
   const macbook = assets.find((a) => a.assetTag === 'AF-0320');
@@ -436,7 +436,7 @@ async function seed() {
   ]);
   console.log('✓ 5 maintenance requests');
 
-  // --- Bookings (Resource Booking / Screen 6) ---
+  // --- Bookings ---
   const room = assets.find((a) => a.assetTag === 'AF-0410'); // Conference Room B2
   // Two non-overlapping slots today so the day rail has blocks; a demo user can
   // then try 9:30–10:30 to hit the overlap 409.
@@ -476,7 +476,7 @@ async function seed() {
   );
   console.log(`✓ ${bookingDefs.length} bookings (room + fleet, spread for the heatmap)`);
 
-  // --- Audit cycle (Screen 8), Open, scoped to Engineering, items Pending ---
+  // --- Audit cycle: Open, scoped to Engineering, items Pending ---
   const engAssets = assets.filter((a) => String(a.department) === String(engineering._id));
   await AuditCycle.create({
     title: 'Q3 Audit — Engineering',
@@ -516,7 +516,7 @@ async function seed() {
   });
   console.log('✓ 1 closed audit cycle (AF-0201 flagged Missing → Lost)');
 
-  // --- Activity Logs (Module 6) ---
+  // --- Activity Logs ---
   // Seed recent activity matching the mockups
   await ActivityLog.create([
     {
@@ -570,8 +570,8 @@ async function seed() {
   ]);
   console.log('✓ 6 activity logs seeded');
 
-  // --- Notifications (Module 6) with type categories ---
-  // Seed varied notifications matching the Screen 10 mockup tabs
+  // --- Notifications with type categories ---
+  // Seed varied notifications across the notification tabs
   await Notification.create([
     {
       user: employee1._id,

@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 /**
- * Asset: the core resource for Module 3 (Asset Registry & Directory).
+ * Asset: the core asset-registry resource.
  * Cloned from Item.js and adapted for asset lifecycle management.
  */
 const assetSchema = new mongoose.Schema(
@@ -29,7 +29,7 @@ const assetSchema = new mongoose.Schema(
     documents: [{ type: String }], // upload paths (optional)
     isBookable: { type: Boolean, default: false },
 
-    // Lifecycle status (Module 3 registers → Available; Modules 4/5 transition)
+    // Lifecycle status (registration starts at Available; allocation/maintenance transition it)
     status: {
       type: String,
       enum: [
@@ -49,13 +49,13 @@ const assetSchema = new mongoose.Schema(
     // e.g. { "Warranty (months)": 12 }
     customFieldValues: { type: Map, of: mongoose.Schema.Types.Mixed, default: {} },
 
-    // Populated by Module 4 (Allocation & Transfer)
+    // Populated by allocation / transfer
     currentHolder: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     expectedReturnDate: { type: Date, default: null },
-    allocationHistory: { type: Array, default: [] }, // appended by Module 4
+    allocationHistory: { type: Array, default: [] }, // appended on allocate/transfer/return
 
-    // Populated by Module 5 (Maintenance)
-    maintenanceHistory: { type: Array, default: [] }, // appended by Module 5
+    // Populated by maintenance
+    maintenanceHistory: { type: Array, default: [] }, // appended on maintenance transitions
   },
   { timestamps: true }
 );

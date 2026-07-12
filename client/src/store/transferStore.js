@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import api from '../api/axios.js';
 
 /**
- * Transfer store (Module 4): submit a transfer request on an allocated asset,
+ * Transfer store: submit a transfer request on an allocated asset,
  * and approve/reject/list them. Cloned from requestStore.
  */
 export const useTransferStore = create((set, get) => ({

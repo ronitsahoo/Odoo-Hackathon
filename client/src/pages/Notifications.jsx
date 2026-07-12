@@ -8,7 +8,7 @@ import EmptyState from '../components/ui/EmptyState.jsx';
 import { Bell } from 'lucide-react';
 
 /**
- * Notifications page (Screen 10, Module 6) — full feed with filter tabs.
+ * Notifications page — full feed with filter tabs.
  * Tabs: All · Alerts · Approvals · Bookings
  * Each row: colored dot (by type) + message + relative timestamp.
  */

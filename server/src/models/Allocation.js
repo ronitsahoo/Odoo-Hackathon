@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 /**
- * Allocation: one custody record of an asset by a holder (Module 4).
+ * Allocation: one custody record of an asset by a holder.
  * A new active record is created on allocate/transfer-approve; it is marked
  * 'returned' on return or when custody moves on via a transfer.
  */

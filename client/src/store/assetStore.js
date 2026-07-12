@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import api from '../api/axios.js';
 
 /**
- * Asset store — cloned from itemStore.js for Module 3.
+ * Asset store.
  * Manages asset directory list + filters + pagination + CRUD + socket updates.
  */
 const defaultFilters = { search: '', category: '', status: '', department: '', sort: 'new', mine: '' };

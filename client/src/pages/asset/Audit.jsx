@@ -18,7 +18,7 @@ const MARK_COLOR = {
   Damaged: 'bg-amber-100 text-amber-700',
 };
 
-/** Audit (Screen 8): pick/create a cycle, mark items, view discrepancies, close. */
+/** Audit: pick/create a cycle, mark items, view discrepancies, close. */
 export default function Audit() {
   const { user } = useAuthStore();
   const isAdmin = user?.role === 'admin';

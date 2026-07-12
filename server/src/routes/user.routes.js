@@ -8,7 +8,7 @@ import * as users from '../controllers/user.controller.js';
 
 const router = Router();
 
-// Any authenticated user can read a minimal picker list (Module 4 selects).
+// Any authenticated user can read a minimal picker list (for select dropdowns).
 router.get('/list', protect, users.listPickable);
 
 /** Everything below requires an authenticated admin. */

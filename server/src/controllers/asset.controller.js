@@ -7,7 +7,7 @@ import { getNextAssetTag } from '../models/Counter.js';
 import { emitAssetCreated, emitAssetUpdated } from '../sockets/index.js';
 
 /**
- * Asset controller — cloned from item.controller.js and adapted for Module 3.
+ * Asset controller.
  * Handles CRUD + search/filter/pagination for the asset directory.
  */
 

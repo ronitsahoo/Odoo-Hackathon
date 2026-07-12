@@ -13,7 +13,7 @@ import Loader from '../../components/ui/Loader.jsx';
 import { input } from '../../lib/ui.js';
 
 /**
- * Departments tab inside Organization setup (Screen 3).
+ * Departments tab inside Organization setup.
  * Table: Department · Head · Parent Dept · Status.
  * Create/edit modal with head/parent dropdowns.
  */
@@ -148,7 +148,7 @@ export default function DepartmentsTab() {
       </Card>
 
       <p className="text-xs text-slate-400 italic">
-        Editing a department here also drives the picklist in Screens 4 &amp; 5.
+        Departments defined here are available when allocating, transferring, and booking assets.
       </p>
 
       {/* Create / Edit modal */}

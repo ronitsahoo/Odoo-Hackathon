@@ -2,7 +2,7 @@ import { ActivityLog } from '../models/ActivityLog.js';
 import { emitActivity } from '../sockets/index.js';
 
 /**
- * Small helper to log activity from controllers (Module 6) and push a live
+ * Small helper to log activity from controllers and push a live
  * signal so the dashboard Recent Activity feed refreshes.
  * Usage: await logActivity({ actor, action, summary, entityType, entityId })
  */

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import api from '../api/axios.js';
 
-/** Audit store (Screen 8): cycles list/detail, create, mark items, close. */
+/** Audit store: cycles list/detail, create, mark items, close. */
 export const useAuditStore = create((set, get) => ({
   cycles: [],
   current: null,

@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 
 /**
  * Category store — list / create / update.
- * Reusable by Module 3 which consumes customFields.
+ * Categories carry the customFields consumed by asset registration.
  */
 export const useCategoryStore = create((set) => ({
   categories: [],

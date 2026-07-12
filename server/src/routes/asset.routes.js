@@ -7,7 +7,7 @@ import { upload } from '../middleware/upload.middleware.js';
 import * as asset from '../controllers/asset.controller.js';
 
 /**
- * Asset routes — cloned from item.routes.js and adapted for Module 3.
+ * Asset routes.
  * Reads: any authenticated user (protect).
  * Writes: asset_manager or admin only (requireRole).
  */

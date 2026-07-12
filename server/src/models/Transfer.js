@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 /**
  * Transfer: a request to move an allocated asset from its current holder to a
- * new requester (Module 4). Cloned from the Request workflow pattern.
+ * new requester.
  * Direct re-allocation of an already-allocated asset is blocked; it must go
  * through this approval flow instead.
  */

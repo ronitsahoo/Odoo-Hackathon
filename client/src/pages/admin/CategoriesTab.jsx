@@ -19,7 +19,7 @@ const FIELD_TYPES = [
 ];
 
 /**
- * Categories tab inside Organization setup (Screen 3).
+ * Categories tab inside Organization setup.
  * Table: Name · #Fields · Status.
  * Create/edit modal with dynamic customFields editor.
  */
@@ -201,7 +201,7 @@ export default function CategoriesTab() {
               </Button>
             </div>
             {form.customFields.length === 0 && (
-              <p className="text-xs text-slate-400">No custom fields. Module 3 will use these for asset forms.</p>
+              <p className="text-xs text-slate-400">No custom fields yet. Add fields to capture extra details when registering assets in this category.</p>
             )}
             <div className="space-y-2">
               {form.customFields.map((cf, idx) => (

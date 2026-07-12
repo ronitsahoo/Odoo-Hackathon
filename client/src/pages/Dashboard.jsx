@@ -15,7 +15,7 @@ import Textarea from '../components/ui/Textarea.jsx';
 import StatusBadge from '../components/StatusBadge.jsx';
 
 /**
- * Dashboard (Screen 2) — role-aware. admin/asset_manager see org KPIs;
+ * Dashboard — role-aware. admin/asset_manager see org KPIs;
  * dept_head sees department-scoped KPIs; employee sees their assets + requests.
  * KPI cards link to the relevant filtered screens; the overdue banner drills down.
  */

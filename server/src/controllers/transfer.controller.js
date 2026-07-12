@@ -10,7 +10,7 @@ import { emitAssetUpdated } from '../sockets/index.js';
 
 /**
  * ============================================================================
- * TRANSFER — request to move an allocated asset to a new holder (Module 4).
+ * TRANSFER — request to move an allocated asset to a new holder.
  * Cloned from the Request workflow. Approval reassigns custody atomically:
  * the Transfer row flips Requested -> Reallocated in one guarded update so a
  * request can't be approved twice.

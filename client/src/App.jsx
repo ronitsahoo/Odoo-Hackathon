@@ -17,16 +17,13 @@ import EmployeeDirectory from './pages/admin/EmployeeDirectory.jsx';
 import DepartmentsTab from './pages/admin/DepartmentsTab.jsx';
 import CategoriesTab from './pages/admin/CategoriesTab.jsx';
 import NotFound from './pages/NotFound.jsx';
-// Module 3: Asset pages
+// Asset pages
 import Assets from './pages/asset/Assets.jsx';
 import AssetDetail from './pages/asset/AssetDetail.jsx';
 import RegisterAsset from './pages/asset/RegisterAsset.jsx';
 import EditAsset from './pages/asset/EditAsset.jsx';
-// Module 4: Allocation & Transfer
 import Allocation from './pages/asset/Allocation.jsx';
-// Module 5: Maintenance
 import Maintenance from './pages/asset/Maintenance.jsx';
-// Final build: Booking (Screen 6), Audit (Screen 8), Reports (Screen 9)
 import Booking from './pages/asset/Booking.jsx';
 import Audit from './pages/asset/Audit.jsx';
 import Reports from './pages/asset/Reports.jsx';
@@ -68,8 +65,6 @@ export default function App() {
           }
         />
 
-        {/* AssetFlow modules not yet built — placeholders so nav never dead-links. */}
-        {/* Module 3: Asset Registry & Directory (complete) */}
         <Route
           path="/assets"
           element={
@@ -102,7 +97,6 @@ export default function App() {
             </RoleRoute>
           }
         />
-        {/* Module 4: Allocation & Transfer (complete) */}
         <Route
           path="/allocation"
           element={
@@ -111,7 +105,6 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        {/* Module 5: Maintenance (complete) */}
         <Route
           path="/maintenance"
           element={
@@ -120,7 +113,6 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        {/* Resource Booking (Screen 6) */}
         <Route
           path="/booking"
           element={
@@ -129,7 +121,6 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        {/* Audit (Screen 8) */}
         <Route
           path="/audit"
           element={
@@ -138,7 +129,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        {/* Reports (Screen 9) — managers/admins */}
+        {/* Reports — managers/admins */}
         <Route
           path="/reports"
           element={
@@ -147,7 +138,6 @@ export default function App() {
             </RoleRoute>
           }
         />
-        {/* Module 6: Notifications (complete) */}
         <Route
           path="/notifications"
           element={
@@ -157,7 +147,7 @@ export default function App() {
           }
         />
 
-        {/* Organization setup (Module 2 home): admin-only, Employee tab inside. */}
+        {/* Organization setup: admin-only, Employee tab inside. */}
         <Route
           path="/admin/organization"
           element={

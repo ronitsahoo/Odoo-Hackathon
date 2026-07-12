@@ -26,7 +26,7 @@ const STATUS_STYLE = {
 };
 
 /**
- * Resource Booking (Screen 6): pick a bookable resource + date, see the day's
+ * Resource Booking: pick a bookable resource + date, see the day's
  * bookings on an hour rail, book/reschedule/cancel slots. Overlaps surface
  * inline (409). A status legend/filter distinguishes Upcoming/Ongoing/etc.
  */

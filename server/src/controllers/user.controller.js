@@ -26,7 +26,7 @@ export const listUsers = asyncHandler(async (req, res) => {
   }
 
   const query = User.find(filter).sort({ createdAt: -1 });
-  // Department model arrives in Module 2; only populate once it's registered.
+  // Only populate the department once its model is registered.
   if (mongoose.models.Department) query.populate('department', 'name');
   const users = await query;
 
@@ -35,7 +35,7 @@ export const listUsers = asyncHandler(async (req, res) => {
 
 /**
  * GET /api/users/list -> minimal active-user list for pickers (holder / transfer
- * "To" selects in Module 4). Any authenticated user; no management fields.
+ * "To" selects). Any authenticated user; no management fields.
  */
 export const listPickable = asyncHandler(async (req, res) => {
   const query = User.find({ status: 'active' })

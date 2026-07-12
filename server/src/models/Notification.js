@@ -8,7 +8,7 @@ import mongoose from 'mongoose';
 const notificationSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-    // Type maps to Screen 10 tabs: alert, approval, booking, info (default/general)
+    // Type maps to the notification tabs: alert, approval, booking, info (default/general)
     // info = general notifications; alert = overdue/audit; approval = maintenance/transfer; booking = resource bookings
     type: { type: String, enum: ['info', 'alert', 'approval', 'booking'], default: 'info', index: true },
     message: { type: String, required: true },

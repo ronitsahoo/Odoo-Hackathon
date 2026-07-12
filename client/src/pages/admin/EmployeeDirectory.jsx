@@ -98,7 +98,7 @@ export default function EmployeeDirectory() {
     }
   }
 
-  // Departments arrive in Module 2; derive filter options from loaded users.
+  // Derive department filter options from loaded users.
   const departments = Array.from(
     new Map(
       users

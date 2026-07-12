@@ -11,7 +11,7 @@ import Loader from '../../components/ui/Loader.jsx';
 
 const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-/** Reports & Analytics (Screen 9) — recharts graphs + lists + per-report CSV export. */
+/** Reports & Analytics — recharts graphs + lists + per-report CSV export. */
 export default function Reports() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);

@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 /**
- * ActivityLog: audit trail of asset lifecycle events (Module 6).
+ * ActivityLog: audit trail of asset lifecycle events.
  * Populated by allocation/transfer/maintenance controllers so the dashboard
  * Recent Activity feed and full audit log have data without extra queries.
  */

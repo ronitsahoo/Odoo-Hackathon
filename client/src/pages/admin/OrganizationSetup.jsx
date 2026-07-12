@@ -3,7 +3,7 @@ import { Building2, Plus } from 'lucide-react';
 import Button from '../../components/ui/Button.jsx';
 
 /**
- * Organization setup (admin-only, Module 2 home). Hosts three sub-tabs:
+ * Organization setup (admin-only). Hosts three sub-tabs:
  * Departments, Categories, Employee. The "+ Add" button dispatches a custom
  * event that the active tab listens for to open its create modal.
  */

@@ -13,7 +13,7 @@ import Select from '../../components/ui/Select.jsx';
 import api from '../../api/axios.js';
 
 /**
- * Assets directory (Module 3 Screen 4): search + filters + table + register button.
+ * Assets directory: search + filters + table + register button.
  * Shows Tag · Name · Category · Status · Location. Row click → detail.
  */
 export default function Assets() {

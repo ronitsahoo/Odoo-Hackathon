@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import api from '../api/axios.js';
 
 /**
- * Maintenance store (Module 5): the kanban's request list + CRUD + socket
+ * Maintenance store: the kanban's request list + CRUD + socket
  * upserts so cards move between columns live. Cloned from requestStore.
  */
 export const useMaintenanceStore = create((set, get) => ({

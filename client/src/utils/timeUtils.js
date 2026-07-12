@@ -1,6 +1,6 @@
 /**
  * Convert a timestamp to relative time (e.g. "2m ago", "1h ago", "2d ago").
- * No external dependency — a tiny pure function for Module 6.
+ * No external dependency — a tiny pure function.
  */
 export function relativeTime(date) {
   const now = new Date();

@@ -7,7 +7,7 @@ import * as departments from '../controllers/department.controller.js';
 
 const router = Router();
 
-// Any authenticated user can list (for dropdowns in Screens 4 & 5).
+// Any authenticated user can list (for allocation/booking dropdowns).
 router.get('/', protect, departments.getDepartments);
 
 // Admin-only writes.

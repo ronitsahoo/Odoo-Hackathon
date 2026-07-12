@@ -14,13 +14,13 @@ import {
 
 /**
  * ============================================================================
- * MAINTENANCE WORKFLOW (Module 5) — kanban board.
+ * MAINTENANCE WORKFLOW — kanban board.
  * Legal transitions (a small pure map, easy to read in a viva):
  *   Pending             -> Approved | Rejected
  *   Approved            -> Technician Assigned
  *   Technician Assigned -> In Progress
  *   In Progress         -> Resolved
- * Approving/Resolving flips the underlying asset status, guarded like Module 4.
+ * Approving/Resolving flips the underlying asset status (guarded).
  * ============================================================================
  */
 const TRANSITIONS = {
@@ -107,7 +107,7 @@ export const updateMaintenanceStatus = asyncHandler(async (req, res) => {
   }
   if (next === 'Approved') request.approvedBy = req.user._id;
 
-  // --- Asset side-effects (guarded, consistent with Module 4) ---
+  // --- Asset side-effects (guarded) ---
   const assetId = request.asset._id;
   if (next === 'Approved') {
     // Drop the asset out of the allocation pool.

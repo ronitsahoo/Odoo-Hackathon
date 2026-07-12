@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 
 /**
  * Department store — list / create / update.
- * Reusable by later modules (Screens 4 & 5 need department dropdowns).
+ * Departments feed the allocation, transfer, and booking dropdowns.
  */
 export const useDepartmentStore = create((set) => ({
   departments: [],

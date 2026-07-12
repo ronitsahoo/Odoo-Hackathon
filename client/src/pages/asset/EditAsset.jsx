@@ -10,7 +10,7 @@ import Loader from '../../components/ui/Loader.jsx';
 import api from '../../api/axios.js';
 
 /**
- * Edit Asset form (Module 3): similar to register but pre-filled with existing data.
+ * Edit Asset form: similar to register but pre-filled with existing data.
  * Asset tag is read-only. Not a workflow transition — just field edits.
  */
 export default function EditAsset() {

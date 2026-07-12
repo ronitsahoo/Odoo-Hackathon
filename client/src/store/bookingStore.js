@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import api from '../api/axios.js';
 
 /**
- * Booking store (Resource Booking / Screen 6). The 409 overlap is re-thrown so
+ * Booking store. The 409 overlap is re-thrown so
  * the page can render the inline dashed-red conflict message.
  */
 export const useBookingStore = create((set, get) => ({

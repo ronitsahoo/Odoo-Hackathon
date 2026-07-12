@@ -18,7 +18,7 @@ const MANAGE_ROLES = ['asset_manager', 'dept_head', 'admin'];
 const fmtDate = (d) => (d ? new Date(d).toLocaleDateString(undefined, { month: 'short', day: '2-digit', year: 'numeric' }) : '—');
 
 /**
- * Allocation & Transfer (Screen 5, Module 4). Asset-centric:
+ * Allocation & Transfer. Asset-centric:
  * pick an asset → if Available, allocate; if Allocated, see the red conflict
  * banner + submit a transfer request. Managers can return and approve/reject.
  */

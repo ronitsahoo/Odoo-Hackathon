@@ -3,7 +3,7 @@ import { User } from '../models/User.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 
-/** GET /api/departments — any authenticated user (for dropdowns in Screens 4 & 5). */
+/** GET /api/departments — any authenticated user (for allocation/booking dropdowns). */
 export const getDepartments = asyncHandler(async (req, res) => {
   const filter = {};
   if (req.query.status) filter.status = req.query.status;
