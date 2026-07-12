@@ -1,0 +1,21 @@
+import mongoose from 'mongoose';
+
+/**
+ * Notification: an in-app message for a single user.
+ * Created on request transitions and admin broadcasts, then pushed live to the
+ * recipient's `user:<id>` socket room so the navbar bell updates instantly.
+ */
+const notificationSchema = new mongoose.Schema(
+  {
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    type: { type: String, default: 'info' }, // info | request | moderation | broadcast
+    message: { type: String, required: true },
+    link: { type: String, default: '' }, // client route to open on click
+    read: { type: Boolean, default: false },
+  },
+  { timestamps: true }
+);
+
+notificationSchema.index({ user: 1, read: 1, createdAt: -1 });
+
+export const Notification = mongoose.model('Notification', notificationSchema);

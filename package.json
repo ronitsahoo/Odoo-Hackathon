@@ -1,0 +1,18 @@
+{
+  "name": "odoo-hack-mern-template",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Production-quality MERN skeleton for the Odoo hackathon: 3 roles, auth, a cloneable core resource, status workflow, request/interaction, votes, uploads, real-time, admin moderation.",
+  "type": "module",
+  "scripts": {
+    "install:all": "npm install && npm --prefix server install && npm --prefix client install",
+    "server": "npm --prefix server run dev",
+    "client": "npm --prefix client run dev",
+    "dev": "concurrently -n server,client -c cyan,magenta \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
+    "seed": "npm --prefix server run seed",
+    "start": "npm --prefix server start"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}
