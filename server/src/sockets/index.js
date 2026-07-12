@@ -44,6 +44,9 @@ export function initSockets(server, corsOrigin) {
       // Everyone watches the shared items feed.
       socket.join('items');
 
+      // Everyone watches the shared assets feed (Module 3).
+      socket.join('assets');
+
       // Authenticated users get their private notification room.
       if (socket.userId) socket.join(`user:${socket.userId}`);
 
@@ -84,3 +87,9 @@ export const emitCommentUpdated = (comment) =>
 /** Push a notification to a single user's private room. */
 export const emitNotification = (userId, notification) =>
   getIO().to(`user:${userId}`).emit('notification:new', notification);
+
+// --- Asset emit helpers (Module 3) ---
+export const emitAssetCreated = (asset) => getIO().to('assets').emit('asset:created', asset);
+export const emitAssetUpdated = (asset) => getIO().to('assets').emit('asset:updated', asset);
+export const emitAssetDeleted = (assetId) =>
+  getIO().to('assets').emit('asset:deleted', { id: assetId.toString() });
