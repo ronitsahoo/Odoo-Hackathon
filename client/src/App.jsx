@@ -22,6 +22,11 @@ import CategoriesTab from './pages/admin/CategoriesTab.jsx';
 import AdminModeration from './pages/admin/AdminModeration.jsx';
 import AdminBroadcast from './pages/admin/AdminBroadcast.jsx';
 import NotFound from './pages/NotFound.jsx';
+// Module 3: Asset pages
+import Assets from './pages/asset/Assets.jsx';
+import AssetDetail from './pages/asset/AssetDetail.jsx';
+import RegisterAsset from './pages/asset/RegisterAsset.jsx';
+import EditAsset from './pages/asset/EditAsset.jsx';
 
 /**
  * Route table. All pages share the Layout shell. Auth pages (Login/Register)
@@ -78,8 +83,41 @@ export default function App() {
         />
 
         {/* AssetFlow modules not yet built — placeholders so nav never dead-links. */}
+        {/* Module 3: Asset Registry & Directory (complete) */}
+        <Route
+          path="/assets"
+          element={
+            <ProtectedRoute>
+              <Assets />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/assets/register"
+          element={
+            <RoleRoute roles={['asset_manager', 'admin']}>
+              <RegisterAsset />
+            </RoleRoute>
+          }
+        />
+        <Route
+          path="/assets/:id"
+          element={
+            <ProtectedRoute>
+              <AssetDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/assets/:id/edit"
+          element={
+            <RoleRoute roles={['asset_manager', 'admin']}>
+              <EditAsset />
+            </RoleRoute>
+          }
+        />
+        {/* Remaining modules — placeholders */}
         {[
-          { path: '/assets', title: 'Assets' },
           { path: '/allocation', title: 'Allocation & Transfer' },
           { path: '/booking', title: 'Resource Booking' },
           { path: '/maintenance', title: 'Maintenance' },
