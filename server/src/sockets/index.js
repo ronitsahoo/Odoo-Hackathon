@@ -47,6 +47,9 @@ export function initSockets(server, corsOrigin) {
       // Everyone watches the shared assets feed (Module 3).
       socket.join('assets');
 
+      // Everyone watches the maintenance board feed (Module 5).
+      socket.join('maintenance');
+
       // Authenticated users get their private notification room.
       if (socket.userId) socket.join(`user:${socket.userId}`);
 
@@ -93,3 +96,9 @@ export const emitAssetCreated = (asset) => getIO().to('assets').emit('asset:crea
 export const emitAssetUpdated = (asset) => getIO().to('assets').emit('asset:updated', asset);
 export const emitAssetDeleted = (assetId) =>
   getIO().to('assets').emit('asset:deleted', { id: assetId.toString() });
+
+// --- Maintenance emit helpers (Module 5) ---
+export const emitMaintenanceCreated = (mr) =>
+  getIO().to('maintenance').emit('maintenance:created', mr);
+export const emitMaintenanceUpdated = (mr) =>
+  getIO().to('maintenance').emit('maintenance:updated', mr);

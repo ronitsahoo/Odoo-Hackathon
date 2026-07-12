@@ -135,35 +135,39 @@ export default function AssetDetail() {
         </div>
       )}
 
-      {/* Allocation History (empty for Module 3, filled by Module 4) */}
+      {/* Allocation History (populated by Module 4), newest first. */}
       <div className={`${card} ${cardPad}`}>
         <h2 className="mb-4 text-lg font-semibold text-slate-900">Allocation History</h2>
         {asset.allocationHistory?.length > 0 ? (
-          <div className="space-y-3">
-            {asset.allocationHistory.map((entry, idx) => (
-              <div key={idx} className="text-sm text-slate-600">
-                {/* Module 4 will populate this */}
-                {JSON.stringify(entry)}
-              </div>
+          <ul className="space-y-2">
+            {[...asset.allocationHistory].reverse().map((entry, idx) => (
+              <li key={idx} className="text-sm text-slate-700">
+                <span className="font-medium">{fmtDate(entry.date)}</span>
+                {' — '}
+                {allocationLine(entry)}
+              </li>
             ))}
-          </div>
+          </ul>
         ) : (
           <p className="text-sm text-slate-500">No allocation history yet.</p>
         )}
       </div>
 
-      {/* Maintenance History (empty for Module 3, filled by Module 5) */}
+      {/* Maintenance History (populated by Module 5), newest first. */}
       <div className={`${card} ${cardPad}`}>
         <h2 className="mb-4 text-lg font-semibold text-slate-900">Maintenance History</h2>
         {asset.maintenanceHistory?.length > 0 ? (
-          <div className="space-y-3">
-            {asset.maintenanceHistory.map((entry, idx) => (
-              <div key={idx} className="text-sm text-slate-600">
-                {/* Module 5 will populate this */}
-                {JSON.stringify(entry)}
-              </div>
+          <ul className="space-y-2">
+            {[...asset.maintenanceHistory].reverse().map((entry, idx) => (
+              <li key={idx} className="text-sm text-slate-700">
+                <span className="font-medium">{fmtDate(entry.date)}</span>
+                {' — '}
+                {entry.status}
+                {entry.issue ? `: ${entry.issue}` : ''}
+                {entry.technician ? ` (tech: ${entry.technician})` : ''}
+              </li>
             ))}
-          </div>
+          </ul>
         ) : (
           <p className="text-sm text-slate-500">No maintenance history yet.</p>
         )}
@@ -179,4 +183,19 @@ function DetailRow({ label, value }) {
       <dd className="mt-1 text-sm text-slate-900">{value || '—'}</dd>
     </div>
   );
+}
+
+const fmtDate = (d) =>
+  d ? new Date(d).toLocaleDateString(undefined, { month: 'short', day: '2-digit', year: 'numeric' }) : '—';
+
+/** Turn one denormalized allocationHistory entry into a readable sentence. */
+function allocationLine(e) {
+  if (e.action === 'returned') {
+    return `Returned by ${e.holderName || 'holder'}${e.condition ? ` — condition: ${e.condition}` : ''}`;
+  }
+  if (e.action === 'transferred') {
+    return `Transferred from ${e.fromName || '—'} to ${e.toName || '—'}`;
+  }
+  // 'allocated'
+  return `Allocated to ${e.holderName || 'holder'}${e.deptName ? ` — ${e.deptName}` : ''}`;
 }

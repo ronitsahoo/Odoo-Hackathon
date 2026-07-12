@@ -20,6 +20,9 @@ import adminRoutes from './routes/admin.routes.js';
 import departmentRoutes from './routes/department.routes.js';
 import categoryRoutes from './routes/category.routes.js';
 import assetRoutes from './routes/asset.routes.js';
+import allocationRoutes from './routes/allocation.routes.js';
+import transferRoutes from './routes/transfer.routes.js';
+import maintenanceRoutes from './routes/maintenance.routes.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 5000;
@@ -53,6 +56,9 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/departments', departmentRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/assets', assetRoutes);
+app.use('/api/allocations', allocationRoutes);
+app.use('/api/transfers', transferRoutes);
+app.use('/api/maintenance', maintenanceRoutes);
 
 // --- 404 + central error handler (must be last) ---
 app.use(notFound);

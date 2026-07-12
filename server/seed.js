@@ -10,6 +10,9 @@ import { Department } from './src/models/Department.js';
 import { AssetCategory } from './src/models/AssetCategory.js';
 import { Asset } from './src/models/Asset.js';
 import { Counter } from './src/models/Counter.js';
+import { Allocation } from './src/models/Allocation.js';
+import { Transfer } from './src/models/Transfer.js';
+import { MaintenanceRequest } from './src/models/MaintenanceRequest.js';
 
 /**
  * Wipe and reseed the database with a demo dataset that exercises every feature:
@@ -29,6 +32,9 @@ async function seed() {
     AssetCategory.deleteMany({}),
     Asset.deleteMany({}),
     Counter.deleteMany({}),
+    Allocation.deleteMany({}),
+    Transfer.deleteMany({}),
+    MaintenanceRequest.deleteMany({}),
   ]);
 
   // --- Users (password hashing happens in the User pre-save hook) ---
@@ -199,7 +205,7 @@ async function seed() {
   // Seed the counter first so tags start at AF-0012
   await Counter.create({ _id: 'assetTag', seq: 11 });
 
-  await Asset.create([
+  const assets = await Asset.create([
     {
       name: 'Dell Latitude 5420',
       category: electronicsCategory._id,
@@ -292,7 +298,154 @@ async function seed() {
   // Update counter to reflect the highest seeded tag
   await Counter.updateOne({ _id: 'assetTag' }, { $set: { seq: 320 } });
   console.log('✓ Counter set past highest tag (AF-0320)');
-  console.log('✓ 1 request + 1 notification');
+
+  // --- Allocations (Module 4) ---
+  // Index by tag for clarity. Seeded assets AF-0012 (demo) and AF-0154 (priya)
+  // are already 'Allocated' from Module 3 — give them matching custody records.
+  const dell = assets.find((a) => a.assetTag === 'AF-0012'); // held by demo
+  const desk = assets.find((a) => a.assetTag === 'AF-0154'); // held by priya
+  const chair = assets.find((a) => a.assetTag === 'AF-0201'); // Available (has prior return)
+
+  const daysFromNow = (n) => new Date(Date.now() + n * 24 * 60 * 60 * 1000);
+
+  // 1) OVERDUE active allocation: Dell → demo, expected back a week ago.
+  await Allocation.create({
+    asset: dell._id,
+    holder: demo._id,
+    holderDept: engineering._id,
+    allocatedBy: manager._id,
+    allocatedDate: daysFromNow(-30),
+    expectedReturnDate: daysFromNow(-7), // past → overdue
+    status: 'active',
+  });
+  dell.allocationHistory = [
+    {
+      action: 'allocated',
+      date: daysFromNow(-30),
+      holder: demo._id,
+      holderName: demo.name,
+      dept: engineering._id,
+      deptName: engineering.name,
+      by: manager._id,
+      byName: manager.name,
+    },
+  ];
+  await dell.save();
+
+  // 2) Active allocation (not overdue): Standing Desk → priya.
+  await Allocation.create({
+    asset: desk._id,
+    holder: priya._id,
+    holderDept: engineering._id,
+    allocatedBy: manager._id,
+    allocatedDate: daysFromNow(-5),
+    expectedReturnDate: daysFromNow(20),
+    status: 'active',
+  });
+  desk.allocationHistory = [
+    {
+      action: 'allocated',
+      date: daysFromNow(-5),
+      holder: priya._id,
+      holderName: priya.name,
+      dept: engineering._id,
+      deptName: engineering.name,
+      by: manager._id,
+      byName: manager.name,
+    },
+  ];
+  await desk.save();
+
+  // 3) A prior RETURNED allocation on an Available asset so the history panel
+  //    has both an allocate and a return row.
+  await Allocation.create({
+    asset: chair._id,
+    holder: priya._id,
+    holderDept: engineering._id,
+    allocatedBy: manager._id,
+    allocatedDate: daysFromNow(-60),
+    returnedDate: daysFromNow(-40),
+    checkInCondition: 'good',
+    checkInNotes: 'Returned in working order.',
+    status: 'returned',
+  });
+  chair.allocationHistory = [
+    {
+      action: 'allocated',
+      date: daysFromNow(-60),
+      holder: priya._id,
+      holderName: priya.name,
+      dept: engineering._id,
+      deptName: engineering.name,
+      by: manager._id,
+      byName: manager.name,
+    },
+    {
+      action: 'returned',
+      date: daysFromNow(-40),
+      holder: priya._id,
+      holderName: priya.name,
+      condition: 'good',
+      notes: 'Returned in working order.',
+      by: manager._id,
+      byName: manager.name,
+    },
+  ];
+  await chair.save();
+  console.log('✓ 3 allocations (1 overdue active, 1 active, 1 prior returned)');
+
+  // --- Maintenance requests (Module 5) spread across the kanban columns ---
+  const projector = assets.find((a) => a.assetTag === 'AF-0062'); // already Under Maintenance
+  const printer = assets.find((a) => a.assetTag === 'AF-0089'); // Available
+  const macbook = assets.find((a) => a.assetTag === 'AF-0320'); // Reserved
+
+  await MaintenanceRequest.create([
+    {
+      asset: projector._id,
+      raisedBy: priya._id,
+      issue: 'Projector bulb not turning on',
+      priority: 'high',
+      status: 'Pending',
+    },
+    {
+      // Approved request whose asset is Under Maintenance (AF-0062 seeded so).
+      asset: projector._id,
+      raisedBy: demo._id,
+      issue: 'AC unit leaking in conf room',
+      priority: 'medium',
+      status: 'Approved',
+      approvedBy: manager._id,
+    },
+    {
+      asset: printer._id,
+      raisedBy: demo._id,
+      issue: 'Forklift hydraulics service',
+      priority: 'high',
+      status: 'Technician Assigned',
+      technicianName: 'R Varma',
+      approvedBy: manager._id,
+    },
+    {
+      asset: printer._id,
+      raisedBy: priya._id,
+      issue: 'Printer jams on duplex — parts ordered',
+      priority: 'medium',
+      status: 'In Progress',
+      technicianName: 'S Iyer',
+      approvedBy: manager._id,
+    },
+    {
+      asset: macbook._id,
+      raisedBy: priya._id,
+      issue: 'Office chair wheel repair',
+      priority: 'low',
+      status: 'Resolved',
+      technicianName: 'R Varma',
+      approvedBy: manager._id,
+      resolvedAt: daysFromNow(-2),
+    },
+  ]);
+  console.log('✓ 5 maintenance requests (Pending → Resolved across the board)');
 
   console.log('\n=== SEED COMPLETE ===');
   console.log('Admin         : admin@demo.com   / admin1234');

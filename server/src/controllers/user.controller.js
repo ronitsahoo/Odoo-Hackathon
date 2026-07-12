@@ -34,6 +34,19 @@ export const listUsers = asyncHandler(async (req, res) => {
 });
 
 /**
+ * GET /api/users/list -> minimal active-user list for pickers (holder / transfer
+ * "To" selects in Module 4). Any authenticated user; no management fields.
+ */
+export const listPickable = asyncHandler(async (req, res) => {
+  const query = User.find({ status: 'active' })
+    .select('name email role department')
+    .sort({ name: 1 });
+  if (mongoose.models.Department) query.populate('department', 'name');
+  const users = await query;
+  res.json({ success: true, data: { users } });
+});
+
+/**
  * PATCH /api/users/:id/role  body { role } -> promote/demote.
  * The single place a role can change. 'admin' is not assignable here.
  */

@@ -27,6 +27,10 @@ import Assets from './pages/asset/Assets.jsx';
 import AssetDetail from './pages/asset/AssetDetail.jsx';
 import RegisterAsset from './pages/asset/RegisterAsset.jsx';
 import EditAsset from './pages/asset/EditAsset.jsx';
+// Module 4: Allocation & Transfer
+import Allocation from './pages/asset/Allocation.jsx';
+// Module 5: Maintenance
+import Maintenance from './pages/asset/Maintenance.jsx';
 
 /**
  * Route table. All pages share the Layout shell. Auth pages (Login/Register)
@@ -116,11 +120,27 @@ export default function App() {
             </RoleRoute>
           }
         />
+        {/* Module 4: Allocation & Transfer (complete) */}
+        <Route
+          path="/allocation"
+          element={
+            <ProtectedRoute>
+              <Allocation />
+            </ProtectedRoute>
+          }
+        />
+        {/* Module 5: Maintenance (complete) */}
+        <Route
+          path="/maintenance"
+          element={
+            <ProtectedRoute>
+              <Maintenance />
+            </ProtectedRoute>
+          }
+        />
         {/* Remaining modules — placeholders */}
         {[
-          { path: '/allocation', title: 'Allocation & Transfer' },
           { path: '/booking', title: 'Resource Booking' },
-          { path: '/maintenance', title: 'Maintenance' },
           { path: '/audit', title: 'Audit' },
           { path: '/reports', title: 'Reports' },
           { path: '/notifications', title: 'Notifications' },

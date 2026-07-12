@@ -6,8 +6,12 @@ import { requireRole } from '../middleware/role.middleware.js';
 import { ASSIGNABLE } from '../utils/roles.js';
 import * as users from '../controllers/user.controller.js';
 
-/** Every route here requires an authenticated admin. */
 const router = Router();
+
+// Any authenticated user can read a minimal picker list (Module 4 selects).
+router.get('/list', protect, users.listPickable);
+
+/** Everything below requires an authenticated admin. */
 router.use(protect, requireRole('admin'));
 
 router.get('/', users.listUsers);
