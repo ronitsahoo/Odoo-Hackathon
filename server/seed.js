@@ -228,11 +228,39 @@ async function seed() {
       customFieldValues: {},
       isBookable: true,
     },
+    {
+      name: 'Old Desktop Tower',
+      category: electronicsCategory._id,
+      assetTag: 'AF-0470',
+      serialNumber: 'DT-OLD-2016',
+      acquisitionDate: new Date('2016-04-01'),
+      acquisitionCost: 40000,
+      condition: 'Worn',
+      location: 'Store Room',
+      department: hq._id,
+      status: 'Retired', // terminal status — demoes the Retired pill + non-allocatable rule
+      customFieldValues: {},
+      isBookable: false,
+    },
+    {
+      name: 'Cracked Monitor',
+      category: electronicsCategory._id,
+      assetTag: 'AF-0480',
+      serialNumber: 'MON-CRK-01',
+      acquisitionDate: new Date('2017-09-01'),
+      acquisitionCost: 12000,
+      condition: 'Damaged',
+      location: 'E-waste',
+      department: null,
+      status: 'Disposed', // terminal status
+      customFieldValues: {},
+      isBookable: false,
+    },
   ]);
-  console.log('✓ 8 assets (2 bookable resources)');
+  console.log('✓ 10 assets (2 bookable; Reserved/Retired/Disposed present)');
 
-  await Counter.updateOne({ _id: 'assetTag' }, { $set: { seq: 450 } });
-  console.log('✓ Counter set past highest tag (AF-0450)');
+  await Counter.updateOne({ _id: 'assetTag' }, { $set: { seq: 480 } });
+  console.log('✓ Counter set past highest tag (AF-0480)');
 
   // --- Allocations (Module 4) ---
   const dell = assets.find((a) => a.assetTag === 'AF-0012'); // held by employee1
@@ -324,7 +352,36 @@ async function seed() {
     },
   ];
   await chair.save();
-  console.log('✓ 3 allocations (1 overdue active, 1 active, 1 prior returned)');
+
+  // Allocate a printer to the admin so their own dashboard shows self-assigned assets.
+  const printerAsset = assets.find((a) => a.assetTag === 'AF-0089');
+  await Allocation.create({
+    asset: printerAsset._id,
+    holder: admin._id,
+    holderDept: hq._id,
+    allocatedBy: admin._id,
+    allocatedDate: daysFromNow(-3),
+    expectedReturnDate: daysFromNow(10),
+    status: 'active',
+  });
+  printerAsset.status = 'Allocated';
+  printerAsset.currentHolder = admin._id;
+  printerAsset.allocationHistory = [{
+    action: 'allocated', date: daysFromNow(-3), holder: admin._id, holderName: admin.name,
+    dept: hq._id, deptName: hq.name, by: admin._id, byName: admin.name,
+  }];
+  await printerAsset.save();
+  console.log('✓ 4 allocations (1 overdue, 1 active, 1 returned, 1 to admin)');
+
+  // A pending transfer so the "Request History" section + pending-approvals are demoable.
+  await Transfer.create({
+    asset: dell._id, // AF-0012, held by employee1
+    fromHolder: employee1._id,
+    toRequester: employee2._id,
+    reason: 'Employee Two needs the laptop for a project',
+    status: 'Requested',
+  });
+  console.log('✓ 1 pending transfer request (employee1 → employee2 on AF-0012)');
 
   // --- Maintenance requests (Module 5) ---
   const projector = assets.find((a) => a.assetTag === 'AF-0062');
@@ -338,6 +395,7 @@ async function seed() {
       issue: 'Projector bulb not turning on',
       priority: 'high',
       status: 'Pending',
+      photo: '/uploads/sample-maintenance.png', // demoes the "View photo" button
     },
     {
       asset: projector._id,
@@ -387,25 +445,36 @@ async function seed() {
     d.setHours(h, m, 0, 0);
     return d;
   };
-  await Booking.create([
-    {
-      resource: room._id,
-      bookedBy: employee1._id,
-      purpose: 'Procurement Team',
-      startTime: at(9, 0),
-      endTime: at(10, 0),
+  const vehicle = assets.find((a) => a.assetTag === 'AF-0450'); // bookable fleet vehicle
+  // A slot on day D at hour H (D relative to today) so the heatmap spreads across days.
+  const slot = (dayOffset, hour) => {
+    const s = new Date();
+    s.setDate(s.getDate() + dayOffset);
+    s.setHours(hour, 0, 0, 0);
+    const e = new Date(s);
+    e.setHours(hour + 1);
+    return { start: s, end: e };
+  };
+  const bookingDefs = [
+    { r: room, by: employee1, purpose: 'Procurement Team', start: at(9, 0), end: at(10, 0) },
+    { r: room, by: employee2, purpose: 'Design Review', start: at(14, 0), end: at(15, 0) },
+    // Spread across weekdays/hours so the booking heatmap renders non-empty.
+    ...[[-2, 10], [-1, 11], [1, 9], [2, 15], [3, 16], [4, 13]].map(([d, h], i) => {
+      const { start, end } = slot(d, h);
+      return { r: vehicle, by: i % 2 ? employee1 : employee2, purpose: 'Site visit', start, end };
+    }),
+  ];
+  await Booking.create(
+    bookingDefs.map((b) => ({
+      resource: b.r._id,
+      bookedBy: b.by._id,
+      purpose: b.purpose,
+      startTime: b.start,
+      endTime: b.end,
       status: 'Upcoming',
-    },
-    {
-      resource: room._id,
-      bookedBy: employee2._id,
-      purpose: 'Design Review',
-      startTime: at(14, 0),
-      endTime: at(15, 0),
-      status: 'Upcoming',
-    },
-  ]);
-  console.log('✓ 2 bookings on Conference Room B2 (9–10, 14–15)');
+    }))
+  );
+  console.log(`✓ ${bookingDefs.length} bookings (room + fleet, spread for the heatmap)`);
 
   // --- Audit cycle (Screen 8), Open, scoped to Engineering, items Pending ---
   const engAssets = assets.filter((a) => String(a.department) === String(engineering._id));
@@ -425,6 +494,27 @@ async function seed() {
     })),
   });
   console.log(`✓ 1 open audit cycle (${engAssets.length} items to verify)`);
+
+  // A CLOSED audit cycle that already flagged a Missing asset → the discrepancy
+  // report on Reports is non-empty, and the asset reflects Lost.
+  const missingAsset = assets.find((a) => a.assetTag === 'AF-0201'); // the chair
+  missingAsset.status = 'Lost';
+  missingAsset.currentHolder = null;
+  await missingAsset.save();
+  await AuditCycle.create({
+    title: 'Q2 Audit — HQ (closed)',
+    scopeType: 'department',
+    department: hq._id,
+    startDate: daysFromNow(-40),
+    endDate: daysFromNow(-25),
+    auditors: [manager._id],
+    status: 'Closed',
+    items: [
+      { asset: missingAsset._id, expectedLocation: 'Warehouse - Shelf B3', mark: 'Missing', note: 'Not found during audit' },
+      { asset: assets.find((a) => a.assetTag === 'AF-0089')._id, expectedLocation: 'HQ Floor 1 - Admin', mark: 'Verified', note: '' },
+    ],
+  });
+  console.log('✓ 1 closed audit cycle (AF-0201 flagged Missing → Lost)');
 
   // --- Activity Logs (Module 6) ---
   // Seed recent activity matching the mockups

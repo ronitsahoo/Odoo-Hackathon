@@ -33,6 +33,7 @@ export default function EditAsset() {
     condition: '',
     location: '',
     department: '',
+    status: 'Available',
     isBookable: false,
     customFieldValues: {},
   });
@@ -66,6 +67,7 @@ export default function EditAsset() {
           condition: assetData.condition || '',
           location: assetData.location || '',
           department: assetData.department?._id || '',
+          status: assetData.status || 'Available',
           isBookable: assetData.isBookable || false,
           customFieldValues:
             assetData.customFieldValues && typeof assetData.customFieldValues === 'object'
@@ -128,6 +130,7 @@ export default function EditAsset() {
       if (form.condition) formData.append('condition', form.condition);
       if (form.location) formData.append('location', form.location);
       if (form.department) formData.append('department', form.department);
+      formData.append('status', form.status);
       formData.append('isBookable', form.isBookable);
       if (Object.keys(form.customFieldValues).length > 0) {
         formData.append('customFieldValues', JSON.stringify(form.customFieldValues));
@@ -297,6 +300,19 @@ export default function EditAsset() {
             />
           </div>
 
+          {/* Status — managers/admins can set the full lifecycle set incl. terminal states */}
+          <div>
+            <label className={label}>Status</label>
+            <Select
+              value={form.status}
+              onChange={(e) => handleChange('status', e.target.value)}
+              options={[
+                'Available', 'Allocated', 'Reserved', 'Under Maintenance', 'Lost', 'Retired', 'Disposed',
+              ].map((s) => ({ value: s, label: s }))}
+            />
+            <p className="mt-1 text-xs text-slate-400">Lost / Retired / Disposed assets are not allocatable or bookable.</p>
+          </div>
+
           {/* Is Bookable */}
           <div className="flex items-center gap-2">
             <input
@@ -313,11 +329,14 @@ export default function EditAsset() {
 
           {/* Photos */}
           <div>
-            <label className={label}>Photos</label>
-            <p className="mb-2 text-xs text-slate-500">
-              Upload new photos (existing photos remain unless removed)
-            </p>
-            <ImageUploader images={photos} onChange={setPhotos} maxImages={10} />
+            <ImageUploader
+              label="Photos"
+              files={photos}
+              onChange={setPhotos}
+              existing={asset.photos || []}
+              max={10}
+            />
+            <p className="mt-1 text-xs text-slate-500">New photos are added to the existing ones.</p>
           </div>
 
           {/* Submit */}
@@ -325,14 +344,14 @@ export default function EditAsset() {
             <button
               type="button"
               onClick={() => navigate(`/assets/${id}`)}
-              className={`${btn.base} ${btn.secondary}`}
+              className={`${btn.base} ${btn.secondary} ${btn.md}`}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className={`${btn.base} ${btn.primary} flex-1`}
+              className={`${btn.base} ${btn.primary} ${btn.md} flex-1`}
             >
               {submitting ? 'Saving...' : 'Save Changes'}
             </button>

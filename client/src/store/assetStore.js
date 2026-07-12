@@ -5,7 +5,7 @@ import api from '../api/axios.js';
  * Asset store — cloned from itemStore.js for Module 3.
  * Manages asset directory list + filters + pagination + CRUD + socket updates.
  */
-const defaultFilters = { search: '', category: '', status: '', department: '', sort: 'new' };
+const defaultFilters = { search: '', category: '', status: '', department: '', sort: 'new', mine: '' };
 
 export const useAssetStore = create((set, get) => ({
   assets: [],

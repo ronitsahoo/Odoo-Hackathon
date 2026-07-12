@@ -148,10 +148,14 @@ export const rejectTransfer = asyncHandler(async (req, res) => {
   res.json({ success: true, data: { transfer } });
 });
 
-/** GET /api/transfers?status= -> list transfers (for pending counts / approvals). */
+/** GET /api/transfers?status=&mine= -> list transfers (approvals, or the caller's own). */
 export const listTransfers = asyncHandler(async (req, res) => {
   const filter = {};
   if (req.query.status) filter.status = req.query.status;
+  // "My requests": transfers I raised or that target me.
+  if (req.query.mine === 'true') {
+    filter.$or = [{ toRequester: req.user._id }, { fromHolder: req.user._id }];
+  }
   const transfers = await Transfer.find(filter).populate(POP).sort({ createdAt: -1 });
   res.json({ success: true, data: { transfers } });
 });

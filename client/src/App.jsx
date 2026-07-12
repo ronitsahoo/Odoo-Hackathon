@@ -5,18 +5,17 @@ import { useAuthStore } from './store/authStore.js';
 import Layout from './components/layout/Layout.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import RoleRoute from './components/RoleRoute.jsx';
+import GuestRoute from './components/GuestRoute.jsx';
 
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Profile from './pages/Profile.jsx';
 import Notifications from './pages/Notifications.jsx';
-import AdminDashboard from './pages/admin/AdminDashboard.jsx';
 import OrganizationSetup from './pages/admin/OrganizationSetup.jsx';
 import EmployeeDirectory from './pages/admin/EmployeeDirectory.jsx';
 import DepartmentsTab from './pages/admin/DepartmentsTab.jsx';
 import CategoriesTab from './pages/admin/CategoriesTab.jsx';
-import AdminBroadcast from './pages/admin/AdminBroadcast.jsx';
 import NotFound from './pages/NotFound.jsx';
 // Module 3: Asset pages
 import Assets from './pages/asset/Assets.jsx';
@@ -46,9 +45,9 @@ export default function App() {
   return (
     <Routes>
       <Route element={<Layout />}>
-        {/* Public (Login/Register). Unauthenticated hits to / redirect here via ProtectedRoute */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        {/* Auth pages — guests only; an authed user is bounced to the dashboard. */}
+        <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
+        <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
 
         {/* Authenticated Root & Dashboard */}
         <Route
@@ -158,15 +157,6 @@ export default function App() {
           }
         />
 
-        {/* Admin */}
-        <Route
-          path="/admin"
-          element={
-            <RoleRoute>
-              <AdminDashboard />
-            </RoleRoute>
-          }
-        />
         {/* Organization setup (Module 2 home): admin-only, Employee tab inside. */}
         <Route
           path="/admin/organization"
@@ -182,14 +172,9 @@ export default function App() {
           <Route path="employees" element={<EmployeeDirectory />} />
         </Route>
 
-        <Route
-          path="/admin/broadcast"
-          element={
-            <RoleRoute>
-              <AdminBroadcast />
-            </RoleRoute>
-          }
-        />
+        {/* Legacy admin routes removed — one dashboard at "/". Redirect stragglers. */}
+        <Route path="/admin" element={<Navigate to="/" replace />} />
+        <Route path="/admin/broadcast" element={<Navigate to="/" replace />} />
 
         <Route path="*" element={<NotFound />} />
       </Route>

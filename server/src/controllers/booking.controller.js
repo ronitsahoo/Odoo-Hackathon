@@ -39,8 +39,35 @@ export const listBookings = asyncHandler(async (req, res) => {
     filter.endTime = { $gt: start };
   }
   const bookings = await Booking.find(filter).populate(POP).sort({ startTime: 1 });
+
+  // Lightweight reminder: notify the caller once about their own bookings that
+  // start within the next hour (no cron — just a check on load).
+  await sendDueReminders(req.user._id);
+
   res.json({ success: true, data: { bookings: bookings.map(withDisplay) } });
 });
+
+/** Fire "starting soon" notifications for the user's imminent, un-reminded bookings. */
+async function sendDueReminders(userId) {
+  const now = new Date();
+  const soon = new Date(now.getTime() + 60 * 60 * 1000); // next hour
+  const due = await Booking.find({
+    bookedBy: userId,
+    status: { $ne: 'Cancelled' },
+    reminded: false,
+    startTime: { $gte: now, $lte: soon },
+  }).populate('resource', 'name assetTag');
+  for (const b of due) {
+    await notify({
+      user: userId,
+      type: 'booking',
+      message: `Reminder: "${b.resource?.name}" (${b.resource?.assetTag}) booking starts at ${fmtTime(b.startTime)}`,
+      link: '/booking',
+    });
+    b.reminded = true;
+    await b.save();
+  }
+}
 
 /**
  * POST /api/bookings -> reserve a slot.
@@ -57,6 +84,9 @@ export const createBooking = asyncHandler(async (req, res) => {
   const resource = await Asset.findById(resourceId);
   if (!resource) throw new ApiError(404, 'Resource not found');
   if (!resource.isBookable) throw new ApiError(400, 'This asset is not bookable');
+  if (['Lost', 'Retired', 'Disposed'].includes(resource.status)) {
+    throw new ApiError(400, `A ${resource.status} asset cannot be booked`);
+  }
 
   // Overlap guard.
   const clash = await Booking.findOne({
@@ -117,6 +147,54 @@ export const cancelBooking = asyncHandler(async (req, res) => {
     actor: req.user._id,
     action: 'booking.cancelled',
     summary: `${booking.resource.name} ${booking.resource.assetTag} — booking cancelled`,
+    entityType: 'Booking',
+    entityId: booking._id,
+  });
+  emitBookingUpdated(withDisplay(booking));
+
+  res.json({ success: true, data: { booking: withDisplay(booking) } });
+});
+
+/** PATCH /api/bookings/:id/reschedule -> change times, re-running the overlap guard. */
+export const rescheduleBooking = asyncHandler(async (req, res) => {
+  const { startTime, endTime } = req.body;
+  const booking = await Booking.findById(req.params.id).populate(POP);
+  if (!booking) throw new ApiError(404, 'Booking not found');
+
+  const isOwner = booking.bookedBy._id.toString() === req.user._id.toString();
+  const isManager = ['asset_manager', 'admin'].includes(req.user.role);
+  if (!isOwner && !isManager) throw new ApiError(403, 'Not your booking');
+  if (booking.status === 'Cancelled') throw new ApiError(400, 'Cannot reschedule a cancelled booking');
+
+  const start = new Date(startTime);
+  const end = new Date(endTime);
+  if (!(start < end)) throw new ApiError(400, 'End time must be after start time');
+
+  // Overlap guard, excluding this booking itself.
+  const clash = await Booking.findOne({
+    _id: { $ne: booking._id },
+    resource: booking.resource._id,
+    status: { $ne: 'Cancelled' },
+    startTime: { $lt: end },
+    endTime: { $gt: start },
+  });
+  if (clash) throw new ApiError(409, 'Time slot overlaps an existing booking');
+
+  booking.startTime = start;
+  booking.endTime = end;
+  booking.reminded = false; // re-arm reminder for the new time
+  await booking.save();
+
+  await notify({
+    user: booking.bookedBy._id,
+    type: 'booking',
+    message: `Booking rescheduled: ${booking.resource.name} (${booking.resource.assetTag}) — ${fmtTime(start)} to ${fmtTime(end)}`,
+    link: '/booking',
+  });
+  await logActivity({
+    actor: req.user._id,
+    action: 'booking.rescheduled',
+    summary: `${booking.resource.name} ${booking.resource.assetTag} — booking rescheduled to ${fmtTime(start)}–${fmtTime(end)}`,
     entityType: 'Booking',
     entityId: booking._id,
   });

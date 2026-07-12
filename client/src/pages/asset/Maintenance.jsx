@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
-import { Wrench, Plus, ArrowRight } from 'lucide-react';
+import { Wrench, Plus, ArrowRight, Image as ImageIcon } from 'lucide-react';
 import api, { apiError } from '../../api/axios.js';
 import { useAuthStore } from '../../store/authStore.js';
 import { useMaintenanceStore } from '../../store/maintenanceStore.js';
@@ -128,14 +128,16 @@ export default function Maintenance() {
       {loading && requests.length === 0 ? (
         <Loader label="Loading board…" />
       ) : (
-        <div className="flex gap-4 overflow-x-auto pb-2">
+        // Responsive: 1 col on mobile → 2/3 on tablet → all 5 on wide screens.
+        // Columns flex to fit the container, so there's no forced horizontal overflow.
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {COLUMNS.map((col) => (
-            <div key={col.key} className="flex w-72 shrink-0 flex-col">
-              <div className="mb-2 flex items-center justify-between px-1">
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+            <div key={col.key} className="flex min-w-0 flex-col rounded-lg bg-slate-50/60 p-2">
+              <div className="sticky top-14 z-10 mb-2 flex items-center justify-between rounded-md bg-slate-100 px-2 py-1.5">
+                <h2 className="truncate text-xs font-semibold uppercase tracking-wide text-slate-600">
                   {col.label}
                 </h2>
-                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
+                <span className="rounded-full bg-white px-2 py-0.5 text-xs text-slate-500">
                   {byColumn[col.key].length}
                 </span>
               </div>
@@ -152,7 +154,7 @@ export default function Maintenance() {
                   />
                 ))}
                 {byColumn[col.key].length === 0 && (
-                  <p className="px-1 text-xs text-slate-300">No cards</p>
+                  <p className="px-1 py-4 text-center text-xs text-slate-300">No cards</p>
                 )}
               </div>
             </div>
@@ -259,8 +261,16 @@ function MaintenanceCard({ request: r, canManage, onApprove, onReject, onAdvance
           {r.priority}
         </span>
       </div>
-      <p className="text-sm font-medium text-slate-800">{r.issue}</p>
+      {/* Asset name + issue */}
+      <p className="text-sm font-semibold text-slate-800">{r.asset?.name || 'Unknown asset'}</p>
+      <p className="text-sm text-slate-600">{r.issue}</p>
       {r.technicianName && <p className="mt-1 text-xs text-slate-500">tech: {r.technicianName}</p>}
+      {r.photo && (
+        <a href={r.photo} target="_blank" rel="noreferrer"
+          className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-brand-600 hover:underline">
+          <ImageIcon size={12} /> View photo
+        </a>
+      )}
 
       {canManage && !resolved && (
         <div className="mt-3 flex gap-2">

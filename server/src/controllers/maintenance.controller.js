@@ -45,11 +45,12 @@ async function notifyManagers(message) {
   );
 }
 
-/** GET /api/maintenance?status=&asset= -> flat list (frontend groups into columns). */
+/** GET /api/maintenance?status=&asset=&mine= -> flat list (frontend groups into columns). */
 export const listMaintenance = asyncHandler(async (req, res) => {
   const filter = {};
   if (req.query.status) filter.status = req.query.status;
   if (req.query.asset) filter.asset = req.query.asset;
+  if (req.query.mine === 'true') filter.raisedBy = req.user._id; // "My requests"
   const requests = await MaintenanceRequest.find(filter).populate(POP).sort({ createdAt: -1 });
   res.json({ success: true, data: { requests } });
 });

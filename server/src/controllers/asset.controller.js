@@ -30,20 +30,25 @@ export const listAssets = asyncHandler(async (req, res) => {
 
   const filter = {};
 
-  // Search: try exact match on assetTag first (QR scan), otherwise text search
+  // Search matches tag / serial / name (partial, case-insensitive). A scanned
+  // QR value is just the full tag, so it matches the assetTag branch here.
   if (search) {
-    const trimmed = search.trim();
-    // Check if it looks like an asset tag (AF-XXXX)
-    if (/^AF-\d{4}$/i.test(trimmed)) {
-      filter.assetTag = trimmed.toUpperCase();
-    } else {
-      filter.$text = { $search: trimmed };
-    }
+    const rx = new RegExp(escapeRegex(search.trim()), 'i');
+    filter.$or = [{ assetTag: rx }, { serialNumber: rx }, { name: rx }];
   }
 
   if (category) filter.category = category;
   if (status) filter.status = status;
   if (department) filter.department = department;
+
+  // Role-scoped "My assets" view (RBAC enforced here, not just in the UI):
+  //   employee  → assets currently held by them
+  //   dept_head → assets in their department
+  //   manager/admin → org-wide (unchanged)
+  if (req.query.mine === 'true') {
+    if (req.user.role === 'employee') filter.currentHolder = req.user._id;
+    else if (req.user.role === 'dept_head') filter.department = req.user.department || null;
+  }
 
   const sortMap = {
     new: { createdAt: -1 },
@@ -104,6 +109,11 @@ export const createAsset = asyncHandler(async (req, res) => {
     customFieldValues,
   } = req.body;
 
+  // Reject a future acquisition date.
+  if (acquisitionDate && new Date(acquisitionDate) > new Date()) {
+    throw new ApiError(400, 'Acquisition date cannot be in the future');
+  }
+
   // Generate the next asset tag atomically
   const assetTag = await getNextAssetTag();
 
@@ -154,10 +164,26 @@ export const updateAsset = asyncHandler(async (req, res) => {
     condition,
     location,
     department,
+    status,
     isBookable,
     customFieldValues,
     removePhotos,
   } = req.body;
+
+  if (acquisitionDate && new Date(acquisitionDate) > new Date()) {
+    throw new ApiError(400, 'Acquisition date cannot be in the future');
+  }
+
+  const VALID_STATUS = ['Available', 'Allocated', 'Reserved', 'Under Maintenance', 'Lost', 'Retired', 'Disposed'];
+  if (status !== undefined && status !== '') {
+    if (!VALID_STATUS.includes(status)) throw new ApiError(400, 'Invalid status');
+    asset.status = status;
+    // Terminal states can't be held — clear custody so they leave the pool cleanly.
+    if (['Lost', 'Retired', 'Disposed'].includes(status)) {
+      asset.currentHolder = null;
+      asset.expectedReturnDate = null;
+    }
+  }
 
   if (name !== undefined) asset.name = name;
   if (category !== undefined) asset.category = category;
@@ -199,4 +225,9 @@ function safeJson(str) {
   } catch {
     return {};
   }
+}
+
+/** Escape user input before using it in a RegExp. */
+function escapeRegex(str) {
+  return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }

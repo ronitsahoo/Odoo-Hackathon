@@ -17,6 +17,14 @@ router.post(
   validate,
   booking.createBooking
 );
+router.patch(
+  '/:id/reschedule',
+  protect,
+  body('startTime').notEmpty().withMessage('Start time is required'),
+  body('endTime').notEmpty().withMessage('End time is required'),
+  validate,
+  booking.rescheduleBooking
+);
 router.patch('/:id/cancel', protect, booking.cancelBooking);
 
 export default router;

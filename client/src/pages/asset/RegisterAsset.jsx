@@ -81,6 +81,12 @@ export default function RegisterAsset() {
     const newErrors = {};
     if (!form.name.trim()) newErrors.name = 'Asset name is required';
     if (!form.category) newErrors.category = 'Category is required';
+    if (form.acquisitionDate) {
+      const picked = new Date(form.acquisitionDate);
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+      if (picked > today) newErrors.acquisitionDate = 'Acquisition date cannot be in the future';
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }
@@ -207,15 +213,17 @@ export default function RegisterAsset() {
             />
           </div>
 
-          {/* Acquisition Date */}
+          {/* Acquisition Date (cannot be in the future) */}
           <div>
             <label className={label}>Acquisition Date</label>
             <input
               type="date"
               value={form.acquisitionDate}
+              max={new Date().toISOString().slice(0, 10)}
               onChange={(e) => handleChange('acquisitionDate', e.target.value)}
               className={input}
             />
+            {errors.acquisitionDate && <p className={errorText}>{errors.acquisitionDate}</p>}
           </div>
 
           {/* Acquisition Cost */}
@@ -283,8 +291,7 @@ export default function RegisterAsset() {
 
           {/* Photos */}
           <div>
-            <label className={label}>Photos</label>
-            <ImageUploader images={photos} onChange={setPhotos} maxImages={10} />
+            <ImageUploader label="Photos" files={photos} onChange={setPhotos} max={10} />
           </div>
 
           {/* Submit */}
@@ -292,14 +299,14 @@ export default function RegisterAsset() {
             <button
               type="button"
               onClick={() => navigate('/assets')}
-              className={`${btn.base} ${btn.secondary}`}
+              className={`${btn.base} ${btn.secondary} ${btn.md}`}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className={`${btn.base} ${btn.primary} flex-1`}
+              className={`${btn.base} ${btn.primary} ${btn.md} flex-1`}
             >
               {submitting ? 'Registering...' : 'Register Asset'}
             </button>

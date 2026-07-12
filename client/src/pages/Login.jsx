@@ -34,7 +34,7 @@ export default function Login() {
     try {
       const user = await login(form);
       toast.success(`Welcome back, ${user.name}!`);
-      navigate(user.role === 'admin' ? '/admin' : '/dashboard');
+      navigate('/'); // single dashboard for every role
     } catch (err) {
       toast.error(apiError(err));
     } finally {

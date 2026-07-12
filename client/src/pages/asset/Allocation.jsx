@@ -42,6 +42,14 @@ export default function Allocation() {
   const [returnModal, setReturnModal] = useState(false);
   const [returnForm, setReturnForm] = useState({ checkInCondition: '', checkInNotes: '' });
   const [busy, setBusy] = useState(false);
+  const [myRequests, setMyRequests] = useState([]);
+
+  // The current user's own transfer requests (raised + received) for the history panel.
+  function loadMyRequests() {
+    api.get('/transfers', { params: { mine: 'true' } })
+      .then(({ data }) => setMyRequests(data.data.transfers))
+      .catch(() => {});
+  }
 
   // --- initial loads ---
   useEffect(() => {
@@ -52,6 +60,7 @@ export default function Allocation() {
       .then(({ data }) => setUsers(data.data.users))
       .catch(() => {});
     fetchOverdue();
+    loadMyRequests();
     if (canManage) fetchTransfers('Requested');
   }, [canManage, fetchOverdue, fetchTransfers]);
 
@@ -118,6 +127,7 @@ export default function Allocation() {
       await submitTransfer({ asset: selectedId, toRequester: xferForm.toRequester, reason: xferForm.reason });
       toast.success('Transfer request submitted');
       setXferForm({ toRequester: '', reason: '' });
+      loadMyRequests();
       if (canManage) fetchTransfers('Requested');
     } catch (err) {
       toast.error(apiError(err));
@@ -327,6 +337,31 @@ export default function Allocation() {
           </div>
         </Card>
       )}
+
+      {/* Request History — the current user's own transfer requests (raised/received) */}
+      <Card className="space-y-3">
+        <h2 className="font-semibold text-slate-800">Request History</h2>
+        {myRequests.length === 0 ? (
+          <p className="text-sm text-slate-500">You haven't raised or received any transfer requests.</p>
+        ) : (
+          <ul className="divide-y divide-slate-100">
+            {myRequests.map((t) => (
+              <li key={t._id} className="flex items-center justify-between gap-2 py-2 text-sm">
+                <span className="min-w-0 text-slate-700">
+                  <span className="font-mono text-xs text-slate-500">{t.asset?.assetTag}</span>{' '}
+                  {t.asset?.name} · {t.fromHolder?.name} → {t.toRequester?.name}
+                  {t.reason ? ` · ${t.reason}` : ''}
+                </span>
+                <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
+                  t.status === 'Reallocated' ? 'bg-emerald-100 text-emerald-700'
+                    : t.status === 'Rejected' ? 'bg-red-100 text-red-700'
+                    : 'bg-amber-100 text-amber-700'
+                }`}>{t.status}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
 
       {/* Allocation history for the selected asset */}
       {asset && (

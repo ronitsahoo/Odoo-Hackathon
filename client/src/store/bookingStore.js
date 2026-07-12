@@ -33,6 +33,12 @@ export const useBookingStore = create((set, get) => ({
     return data.data.booking;
   },
 
+  async rescheduleBooking(id, payload) {
+    const { data } = await api.patch(`/bookings/${id}/reschedule`, payload);
+    get()._upsert(data.data.booking);
+    return data.data.booking;
+  },
+
   _upsert(booking) {
     const list = get().bookings.slice();
     const idx = list.findIndex((b) => b._id === booking._id);

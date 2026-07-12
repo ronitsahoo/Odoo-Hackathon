@@ -18,6 +18,7 @@ const bookingSchema = new mongoose.Schema(
       enum: ['Upcoming', 'Ongoing', 'Completed', 'Cancelled'],
       default: 'Upcoming',
     },
+    reminded: { type: Boolean, default: false }, // "starting soon" notification sent
   },
   { timestamps: true }
 );

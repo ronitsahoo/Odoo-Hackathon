@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Plus, Search } from 'lucide-react';
 import { useAssetStore } from '../../store/assetStore.js';
 import { useAuthStore } from '../../store/authStore.js';
@@ -18,8 +18,10 @@ import api from '../../api/axios.js';
  */
 export default function Assets() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuthStore();
   const canManage = user?.role === 'asset_manager' || user?.role === 'admin';
+  const canScope = user?.role === 'employee' || user?.role === 'dept_head';
 
   const {
     assets,
@@ -38,6 +40,9 @@ export default function Assets() {
 
   const [categories, setCategories] = useState([]);
   const [departments, setDepartments] = useState([]);
+  // Local search text, debounced into the store filter so we don't refetch per keystroke.
+  const [searchText, setSearchText] = useState(filters.search);
+  const debounceRef = useRef(null);
 
   // Fetch categories and departments for filters
   useEffect(() => {
@@ -56,10 +61,27 @@ export default function Assets() {
     loadOptions();
   }, []);
 
+  // Apply status/category filters passed via URL (e.g. from dashboard KPI links).
+  useEffect(() => {
+    const patch = {};
+    if (searchParams.get('status')) patch.status = searchParams.get('status');
+    if (searchParams.get('category')) patch.category = searchParams.get('category');
+    if (searchParams.get('mine')) patch.mine = searchParams.get('mine');
+    if (Object.keys(patch).length) setFilters(patch);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
   // Fetch assets when filters or page changes
   useEffect(() => {
     fetchAssets();
   }, [filters, page, fetchAssets]);
+
+  // Debounce the search box (300ms) into the store filter.
+  function onSearchChange(value) {
+    setSearchText(value);
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => setFilters({ search: value.trim() }), 300);
+  }
 
   // Socket: live updates
   useSocket('asset:created', (asset) => _upsert(asset), [user?._id]);
@@ -86,14 +108,27 @@ export default function Assets() {
             {total} {total === 1 ? 'asset' : 'assets'} registered
           </p>
         </div>
-        {canManage && (
-          <button
-            onClick={() => navigate('/assets/register')}
-            className={`${btn.base} ${btn.primary}`}
-          >
-            <Plus size={18} /> Register Asset
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {canScope && (
+            <label className="flex items-center gap-2 text-sm text-slate-600">
+              <input
+                type="checkbox"
+                checked={filters.mine === 'true'}
+                onChange={(e) => setFilters({ mine: e.target.checked ? 'true' : '' })}
+                className="h-4 w-4 rounded border-slate-300 text-brand-600"
+              />
+              {user?.role === 'dept_head' ? 'My department' : 'My assets'}
+            </label>
+          )}
+          {canManage && (
+            <button
+              onClick={() => navigate('/assets/register')}
+              className={`${btn.base} ${btn.primary} ${btn.md}`}
+            >
+              <Plus size={18} /> Register Asset
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Search bar */}
@@ -105,9 +140,9 @@ export default function Assets() {
         <input
           type="text"
           placeholder="Search by tag, serial, or QR code..."
-          value={filters.search}
-          onChange={(e) => setFilters({ search: e.target.value })}
-          className={`${input.base} pl-10`}
+          value={searchText}
+          onChange={(e) => onSearchChange(e.target.value)}
+          className={`${input} pl-10`}
         />
       </div>
 
