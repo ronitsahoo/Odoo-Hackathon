@@ -26,4 +26,11 @@ router.patch(
   users.setStatus
 );
 
+router.patch(
+  '/:id/department',
+  body('department').optional({ values: 'null' }),
+  validate,
+  users.assignDepartment
+);
+
 export default router;

@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import { Shield, Search } from 'lucide-react';
 import api, { apiError } from '../../api/axios.js';
 import { useAuthStore } from '../../store/authStore.js';
+import { useDepartmentStore } from '../../store/departmentStore.js';
 import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
 import Badge from '../../components/ui/Badge.jsx';
@@ -38,6 +39,7 @@ export default function EmployeeDirectory() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({ search: '', role: '', status: '', department: '' });
+  const { departments: allDepartments, fetchDepartments } = useDepartmentStore();
 
   async function load() {
     try {
@@ -55,6 +57,7 @@ export default function EmployeeDirectory() {
   // Re-fetch whenever a filter changes (small dataset — no debounce needed).
   useEffect(() => {
     load();
+    fetchDepartments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 
@@ -78,6 +81,18 @@ export default function EmployeeDirectory() {
       const { data } = await api.patch(`/users/${u._id}/status`, { status });
       setUsers((prev) => prev.map((x) => (x._id === u._id ? data.data.user : x)));
       toast.success(status === 'active' ? 'Account activated' : 'Account deactivated');
+    } catch (err) {
+      toast.error(apiError(err));
+    }
+  }
+
+  async function changeDepartment(u, departmentId) {
+    try {
+      const { data } = await api.patch(`/users/${u._id}/department`, {
+        department: departmentId || null,
+      });
+      setUsers((prev) => prev.map((x) => (x._id === u._id ? data.data.user : x)));
+      toast.success(departmentId ? 'Department assigned' : 'Department cleared');
     } catch (err) {
       toast.error(apiError(err));
     }
@@ -170,7 +185,24 @@ export default function EmployeeDirectory() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-slate-500">{u.email}</td>
-                      <td className="px-4 py-3 text-slate-500">{u.department?.name || '—'}</td>
+                      <td className="px-4 py-3">
+                        <select
+                          className={`${input} w-40`}
+                          value={u.department?._id || ''}
+                          disabled={isMe}
+                          onChange={(e) => changeDepartment(u, e.target.value)}
+                          title="Assign department"
+                        >
+                          <option value="">— None —</option>
+                          {allDepartments
+                            .filter((d) => d.status === 'active')
+                            .map((d) => (
+                              <option key={d._id} value={d._id}>
+                                {d.name}
+                              </option>
+                            ))}
+                        </select>
+                      </td>
                       <td className="px-4 py-3">
                         <Badge color={ROLE_COLOR[u.role]}>{ROLE_LABEL[u.role] || u.role}</Badge>
                       </td>

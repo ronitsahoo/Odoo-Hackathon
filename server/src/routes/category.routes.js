@@ -1,0 +1,33 @@
+import { Router } from 'express';
+import { body } from 'express-validator';
+import { validate } from '../middleware/validate.middleware.js';
+import { protect } from '../middleware/auth.middleware.js';
+import { requireRole } from '../middleware/role.middleware.js';
+import * as categories from '../controllers/category.controller.js';
+
+const router = Router();
+
+// Any authenticated user can list.
+router.get('/', protect, categories.getCategories);
+
+// Admin-only writes.
+router.post(
+  '/',
+  protect,
+  requireRole('admin'),
+  body('name').trim().notEmpty().withMessage('Category name is required'),
+  validate,
+  categories.createCategory
+);
+
+router.patch(
+  '/:id',
+  protect,
+  requireRole('admin'),
+  body('name').optional().trim().notEmpty().withMessage('Name cannot be empty'),
+  body('status').optional().isIn(['active', 'inactive']).withMessage('Invalid status'),
+  validate,
+  categories.updateCategory
+);
+
+export default router;

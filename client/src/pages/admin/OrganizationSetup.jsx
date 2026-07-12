@@ -1,10 +1,11 @@
-import { NavLink, Outlet } from 'react-router-dom';
-import { Building2 } from 'lucide-react';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { Building2, Plus } from 'lucide-react';
+import Button from '../../components/ui/Button.jsx';
 
 /**
- * Organization setup (admin-only, Module 2 home). Hosts the sub-tabs for the
- * org's people and structure; the Employee tab renders the directory. Future
- * tabs (Departments, Categories) are shown disabled until those modules land.
+ * Organization setup (admin-only, Module 2 home). Hosts three sub-tabs:
+ * Departments, Categories, Employee. The "+ Add" button dispatches a custom
+ * event that the active tab listens for to open its create modal.
  */
 const tabCls = ({ isActive }) =>
   `-mb-px border-b-2 px-4 py-2 text-sm font-medium transition ${
@@ -14,6 +15,21 @@ const tabCls = ({ isActive }) =>
   }`;
 
 export default function OrganizationSetup() {
+  const { pathname } = useLocation();
+
+  // Determine which tab is active to dispatch the right add event.
+  function handleAdd() {
+    if (pathname.includes('departments')) {
+      window.dispatchEvent(new Event('org:add-department'));
+    } else if (pathname.includes('categories')) {
+      window.dispatchEvent(new Event('org:add-category'));
+    }
+    // Employee tab doesn't have a create action from here.
+  }
+
+  // Only show "+ Add" on departments and categories tabs.
+  const showAdd = pathname.includes('departments') || pathname.includes('categories');
+
   return (
     <div className="space-y-4">
       <div>
@@ -23,17 +39,23 @@ export default function OrganizationSetup() {
         <p className="text-sm text-slate-500">Manage the people and structure behind AssetFlow.</p>
       </div>
 
-      <div className="flex items-center gap-1 border-b border-slate-200">
-        <NavLink to="employees" className={tabCls}>
-          Employee
-        </NavLink>
-        {/* Placeholders for later Module 2 work — not links, so nothing dead-links. */}
-        <span className="cursor-not-allowed border-b-2 border-transparent px-4 py-2 text-sm font-medium text-slate-300">
-          Departments
-        </span>
-        <span className="cursor-not-allowed border-b-2 border-transparent px-4 py-2 text-sm font-medium text-slate-300">
-          Categories
-        </span>
+      <div className="flex items-center justify-between border-b border-slate-200">
+        <div className="flex items-center gap-1">
+          <NavLink to="departments" className={tabCls}>
+            Departments
+          </NavLink>
+          <NavLink to="categories" className={tabCls}>
+            Categories
+          </NavLink>
+          <NavLink to="employees" className={tabCls}>
+            Employee
+          </NavLink>
+        </div>
+        {showAdd && (
+          <Button size="sm" onClick={handleAdd} className="mb-1">
+            <Plus size={14} /> Add
+          </Button>
+        )}
       </div>
 
       <Outlet />

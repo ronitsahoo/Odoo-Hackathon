@@ -64,3 +64,17 @@ export const setStatus = asyncHandler(async (req, res) => {
   await user.save();
   res.json({ success: true, data: { user } });
 });
+
+/** PATCH /api/users/:id/department  body { department } -> assign/clear department. */
+export const assignDepartment = asyncHandler(async (req, res) => {
+  const { department } = req.body;
+  const user = await User.findById(req.params.id);
+  if (!user) throw new ApiError(404, 'User not found');
+
+  user.department = department || null;
+  await user.save();
+
+  // Populate department name for the response.
+  if (mongoose.models.Department) await user.populate('department', 'name');
+  res.json({ success: true, data: { user } });
+});

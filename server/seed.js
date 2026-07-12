@@ -6,6 +6,8 @@ import { Item } from './src/models/Item.js';
 import { Comment } from './src/models/Comment.js';
 import { Request } from './src/models/Request.js';
 import { Notification } from './src/models/Notification.js';
+import { Department } from './src/models/Department.js';
+import { AssetCategory } from './src/models/AssetCategory.js';
 
 /**
  * Wipe and reseed the database with a demo dataset that exercises every feature:
@@ -21,6 +23,8 @@ async function seed() {
     Comment.deleteMany({}),
     Request.deleteMany({}),
     Notification.deleteMany({}),
+    Department.deleteMany({}),
+    AssetCategory.deleteMany({}),
   ]);
 
   // --- Users (password hashing happens in the User pre-save hook) ---
@@ -70,6 +74,53 @@ async function seed() {
     bio: 'Deactivated account for testing the status gate.',
   });
   console.log('✓ 6 users (admin, asset_manager, dept_head, 3 employees; 1 inactive)');
+
+  // --- Departments ---
+  const hq = await Department.create({
+    name: 'HQ',
+    head: admin._id,
+    status: 'active',
+  });
+  const engineering = await Department.create({
+    name: 'Engineering',
+    head: head._id,
+    parentDepartment: hq._id,
+    status: 'active',
+  });
+  await Department.create({
+    name: 'Marketing',
+    status: 'inactive',
+  });
+  console.log('✓ 3 departments (HQ, Engineering with parent, Marketing inactive)');
+
+  // --- Asset Categories ---
+  await AssetCategory.create([
+    {
+      name: 'Electronics',
+      customFields: [{ label: 'Warranty (months)', type: 'number' }],
+      status: 'active',
+    },
+    {
+      name: 'Furniture',
+      customFields: [],
+      status: 'active',
+    },
+    {
+      name: 'Vehicles',
+      customFields: [{ label: 'License Plate', type: 'text' }],
+      status: 'inactive',
+    },
+  ]);
+  console.log('✓ 3 asset categories (Electronics with custom field, Furniture, Vehicles inactive)');
+
+  // --- Assign departments to employees ---
+  head.department = engineering._id;
+  await head.save();
+  demo.department = hq._id;
+  await demo.save();
+  priya.department = hq._id;
+  await priya.save();
+  console.log('✓ Departments assigned to employees');
 
   // --- Items (mix of statuses so moderation queue + Home both have content) ---
   const items = await Item.create([

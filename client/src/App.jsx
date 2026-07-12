@@ -17,6 +17,8 @@ import Placeholder from './pages/Placeholder.jsx';
 import AdminDashboard from './pages/admin/AdminDashboard.jsx';
 import OrganizationSetup from './pages/admin/OrganizationSetup.jsx';
 import EmployeeDirectory from './pages/admin/EmployeeDirectory.jsx';
+import DepartmentsTab from './pages/admin/DepartmentsTab.jsx';
+import CategoriesTab from './pages/admin/CategoriesTab.jsx';
 import AdminModeration from './pages/admin/AdminModeration.jsx';
 import AdminBroadcast from './pages/admin/AdminBroadcast.jsx';
 import NotFound from './pages/NotFound.jsx';
@@ -114,7 +116,9 @@ export default function App() {
             </RoleRoute>
           }
         >
-          <Route index element={<Navigate to="employees" replace />} />
+          <Route index element={<Navigate to="departments" replace />} />
+          <Route path="departments" element={<DepartmentsTab />} />
+          <Route path="categories" element={<CategoriesTab />} />
           <Route path="employees" element={<EmployeeDirectory />} />
         </Route>
         <Route

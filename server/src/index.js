@@ -17,6 +17,8 @@ import commentRoutes from './routes/comment.routes.js';
 import requestRoutes from './routes/request.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
 import adminRoutes from './routes/admin.routes.js';
+import departmentRoutes from './routes/department.routes.js';
+import categoryRoutes from './routes/category.routes.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 5000;
@@ -47,6 +49,8 @@ app.use('/api/comments', commentRoutes);
 app.use('/api/requests', requestRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/departments', departmentRoutes);
+app.use('/api/categories', categoryRoutes);
 
 // --- 404 + central error handler (must be last) ---
 app.use(notFound);
