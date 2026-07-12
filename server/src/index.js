@@ -20,6 +20,7 @@ import assetRoutes from './routes/asset.routes.js';
 import allocationRoutes from './routes/allocation.routes.js';
 import transferRoutes from './routes/transfer.routes.js';
 import maintenanceRoutes from './routes/maintenance.routes.js';
+import dashboardRoutes from './routes/dashboard.routes.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 5000;
@@ -53,6 +54,7 @@ app.use('/api/assets', assetRoutes);
 app.use('/api/allocations', allocationRoutes);
 app.use('/api/transfers', transferRoutes);
 app.use('/api/maintenance', maintenanceRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // --- 404 + central error handler (must be last) ---
 app.use(notFound);

@@ -9,6 +9,8 @@ import { Counter } from './src/models/Counter.js';
 import { Allocation } from './src/models/Allocation.js';
 import { Transfer } from './src/models/Transfer.js';
 import { MaintenanceRequest } from './src/models/MaintenanceRequest.js';
+import { ActivityLog } from './src/models/ActivityLog.js';
+import { Notification } from './src/models/Notification.js';
 
 /**
  * Wipe and reseed the database with a demo dataset for AssetFlow.
@@ -26,6 +28,8 @@ async function seed() {
     Allocation.deleteMany({}),
     Transfer.deleteMany({}),
     MaintenanceRequest.deleteMany({}),
+    ActivityLog.deleteMany({}),
+    Notification.deleteMany({}),
   ]);
 
   // --- Users ---
@@ -341,6 +345,122 @@ async function seed() {
     },
   ]);
   console.log('✓ 5 maintenance requests');
+
+  // --- Activity Logs (Module 6) ---
+  // Seed recent activity matching the mockups
+  await ActivityLog.create([
+    {
+      actor: manager._id,
+      action: 'asset.allocated',
+      summary: `${dell.name} ${dell.assetTag} allocated to ${employee1.name} — ${engineering.name}`,
+      entityType: 'Allocation',
+      entityId: dell._id,
+      createdAt: daysFromNow(-30),
+    },
+    {
+      actor: manager._id,
+      action: 'asset.allocated',
+      summary: `${desk.name} ${desk.assetTag} allocated to ${employee2.name} — ${engineering.name}`,
+      entityType: 'Allocation',
+      entityId: desk._id,
+      createdAt: daysFromNow(-5),
+    },
+    {
+      actor: manager._id,
+      action: 'maintenance.approved',
+      summary: `Maintenance request ${projector.assetTag} approved — Projector bulb replacement`,
+      entityType: 'MaintenanceRequest',
+      entityId: projector._id,
+      createdAt: daysFromNow(-3),
+    },
+    {
+      actor: manager._id,
+      action: 'asset.returned',
+      summary: `${chair.name} ${chair.assetTag} returned by ${employee2.name} — condition: good`,
+      entityType: 'Allocation',
+      entityId: chair._id,
+      createdAt: daysFromNow(-40),
+    },
+    {
+      actor: employee1._id,
+      action: 'maintenance.raised',
+      summary: `Maintenance request raised for ${printer.assetTag} — Printer jam issue`,
+      entityType: 'MaintenanceRequest',
+      entityId: printer._id,
+      createdAt: daysFromNow(-2),
+    },
+    {
+      actor: manager._id,
+      action: 'maintenance.resolved',
+      summary: `Maintenance request ${macbook.assetTag} resolved — Chair wheel repair completed`,
+      entityType: 'MaintenanceRequest',
+      entityId: macbook._id,
+      createdAt: daysFromNow(-2),
+    },
+  ]);
+  console.log('✓ 6 activity logs seeded');
+
+  // --- Notifications (Module 6) with type categories ---
+  // Seed varied notifications matching the Screen 10 mockup tabs
+  await Notification.create([
+    {
+      user: employee1._id,
+      type: 'info',
+      message: `${dell.name} ${dell.assetTag} assigned to you`,
+      link: `/assets/${dell._id}`,
+      read: false,
+      createdAt: daysFromNow(-30),
+    },
+    {
+      user: employee2._id,
+      type: 'info',
+      message: `${desk.name} ${desk.assetTag} assigned to you`,
+      link: `/assets/${desk._id}`,
+      read: false,
+      createdAt: daysFromNow(-5),
+    },
+    {
+      user: employee2._id,
+      type: 'approval',
+      message: `Maintenance request ${projector.assetTag} approved — Projector repair`,
+      link: '/maintenance',
+      read: false,
+      createdAt: daysFromNow(-3),
+    },
+    {
+      user: employee1._id,
+      type: 'alert',
+      message: `Overdue return: ${dell.assetTag} was due ${Math.floor((Date.now() - new Date(daysFromNow(-7))) / (1000 * 60 * 60 * 24))} days ago`,
+      link: '/allocation',
+      read: false,
+      createdAt: daysFromNow(-1),
+    },
+    {
+      user: employee2._id,
+      type: 'approval',
+      message: `Transfer request approved: ${chair.assetTag} moved to Facilities dept`,
+      link: '/allocation',
+      read: true,
+      createdAt: daysFromNow(-40),
+    },
+    {
+      user: employee1._id,
+      type: 'booking',
+      message: `Booking confirmed: Conference Room B2 — 2:00 PM to 3:00 PM`,
+      link: '/booking',
+      read: false,
+      createdAt: daysFromNow(-1),
+    },
+    {
+      user: employee2._id,
+      type: 'alert',
+      message: `Audit discrepancy flagged: ${macbook.assetTag} condition mismatch`,
+      link: '/audit',
+      read: false,
+      createdAt: daysFromNow(-4),
+    },
+  ]);
+  console.log('✓ 7 typed notifications seeded');
 
   console.log('\n=== SEED COMPLETE ===');
   console.log('Admin         : admin@demo.com   / admin1234');

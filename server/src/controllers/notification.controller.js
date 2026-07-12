@@ -14,9 +14,17 @@ export async function notify({ user, type = 'info', message, link = '' }) {
   return notification;
 }
 
-/** GET /api/notifications -> current user's notifications, newest first. */
+/** GET /api/notifications -> current user's notifications, newest first, with optional type filter. */
 export const listNotifications = asyncHandler(async (req, res) => {
-  const notifications = await Notification.find({ user: req.user._id })
+  const { type } = req.query; // 'all', 'alert', 'approval', 'booking' or undefined
+  
+  const filter = { user: req.user._id };
+  // If type is provided and not 'all', filter by that type
+  if (type && type !== 'all') {
+    filter.type = type;
+  }
+  
+  const notifications = await Notification.find(filter)
     .sort({ createdAt: -1 })
     .limit(50);
   const unread = await Notification.countDocuments({ user: req.user._id, read: false });
