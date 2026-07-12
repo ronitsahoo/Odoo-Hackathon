@@ -27,6 +27,9 @@ export default function Dashboard() {
   });
   useSocket('maintenance:created', () => fetchSummary());
   useSocket('maintenance:updated', () => fetchSummary());
+  useSocket('booking:created', () => fetchSummary());
+  useSocket('booking:updated', () => fetchSummary());
+  useSocket('activity:new', () => fetchSummary());
 
   if (loading || !summary) {
     return <Loader label="Loading dashboard..." />;

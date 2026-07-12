@@ -20,6 +20,9 @@ import assetRoutes from './routes/asset.routes.js';
 import allocationRoutes from './routes/allocation.routes.js';
 import transferRoutes from './routes/transfer.routes.js';
 import maintenanceRoutes from './routes/maintenance.routes.js';
+import bookingRoutes from './routes/booking.routes.js';
+import auditRoutes from './routes/audit.routes.js';
+import reportRoutes from './routes/report.routes.js';
 import dashboardRoutes from './routes/dashboard.routes.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -54,6 +57,9 @@ app.use('/api/assets', assetRoutes);
 app.use('/api/allocations', allocationRoutes);
 app.use('/api/transfers', transferRoutes);
 app.use('/api/maintenance', maintenanceRoutes);
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/audits', auditRoutes);
+app.use('/api/reports', reportRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
 // --- 404 + central error handler (must be last) ---

@@ -5,6 +5,7 @@ import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { toPublicPath } from '../middleware/upload.middleware.js';
 import { notify } from './notification.controller.js';
+import { logActivity } from '../utils/activityLogger.js';
 import {
   emitMaintenanceCreated,
   emitMaintenanceUpdated,
@@ -72,6 +73,13 @@ export const createMaintenance = asyncHandler(async (req, res) => {
   await notifyManagers(
     `Maintenance raised on "${asset.name}" (${asset.assetTag}): ${issue}`
   );
+  await logActivity({
+    actor: req.user._id,
+    action: 'maintenance.raised',
+    summary: `Maintenance raised for ${asset.assetTag} — ${issue}`,
+    entityType: 'MaintenanceRequest',
+    entityId: request._id,
+  });
   emitMaintenanceCreated(request);
 
   res.status(201).json({ success: true, data: { request } });
@@ -149,6 +157,13 @@ export const updateMaintenanceStatus = asyncHandler(async (req, res) => {
   }
 
   await request.save();
+  await logActivity({
+    actor: req.user._id,
+    action: `maintenance.${next.toLowerCase().replace(/\s+/g, '_')}`,
+    summary: `Maintenance ${request.asset.assetTag} → ${next}${request.technicianName ? ` (tech: ${request.technicianName})` : ''}`,
+    entityType: 'MaintenanceRequest',
+    entityId: request._id,
+  });
   emitMaintenanceUpdated(request);
 
   res.json({ success: true, data: { request } });

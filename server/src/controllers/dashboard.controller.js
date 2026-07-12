@@ -2,6 +2,7 @@ import { Asset } from '../models/Asset.js';
 import { Allocation } from '../models/Allocation.js';
 import { Transfer } from '../models/Transfer.js';
 import { MaintenanceRequest } from '../models/MaintenanceRequest.js';
+import { Booking } from '../models/Booking.js';
 import { ActivityLog } from '../models/ActivityLog.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 
@@ -22,6 +23,7 @@ export const getDashboardSummary = asyncHandler(async (req, res) => {
     activeAllocations,
     pendingTransfers,
     maintenanceRequests,
+    activeBookings,
     recentActivity,
   ] = await Promise.all([
     Asset.find({}),
@@ -31,6 +33,8 @@ export const getDashboardSummary = asyncHandler(async (req, res) => {
       .populate('holderDept', 'name'),
     Transfer.countDocuments({ status: 'Requested' }),
     MaintenanceRequest.find({}),
+    // Active bookings = not cancelled and not yet ended.
+    Booking.countDocuments({ status: { $ne: 'Cancelled' }, endTime: { $gte: now } }),
     ActivityLog.find({})
       .sort({ createdAt: -1 })
       .limit(8)
@@ -47,9 +51,6 @@ export const getDashboardSummary = asyncHandler(async (req, res) => {
     return mr.updatedAt >= todayStart;
   }).length;
   const maintenanceToday = Math.max(assetsUnderMaintenance, requestsMovedToday);
-
-  // Active bookings: placeholder (Booking model not yet built)
-  const activeBookings = 0;
 
   // Upcoming returns: active allocations with expectedReturnDate in next 7 days
   const upcomingReturns = activeAllocations.filter((a) => {

@@ -5,6 +5,7 @@ import { User } from '../models/User.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { notify } from './notification.controller.js';
+import { logActivity } from '../utils/activityLogger.js';
 import { emitAssetUpdated } from '../sockets/index.js';
 
 /**
@@ -115,6 +116,13 @@ export const approveTransfer = asyncHandler(async (req, res) => {
     type: 'transfer',
     message: `"${asset.name}" (${asset.assetTag}) was transferred to ${transfer.toRequester.name}`,
     link: '/allocation',
+  });
+  await logActivity({
+    actor: req.user._id,
+    action: 'asset.transferred',
+    summary: `${asset.name} ${asset.assetTag} transferred from ${transfer.fromHolder.name} to ${transfer.toRequester.name}`,
+    entityType: 'Transfer',
+    entityId: transfer._id,
   });
   emitAssetUpdated(asset);
 

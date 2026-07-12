@@ -9,6 +9,8 @@ import { Counter } from './src/models/Counter.js';
 import { Allocation } from './src/models/Allocation.js';
 import { Transfer } from './src/models/Transfer.js';
 import { MaintenanceRequest } from './src/models/MaintenanceRequest.js';
+import { Booking } from './src/models/Booking.js';
+import { AuditCycle } from './src/models/AuditCycle.js';
 import { ActivityLog } from './src/models/ActivityLog.js';
 import { Notification } from './src/models/Notification.js';
 
@@ -28,6 +30,8 @@ async function seed() {
     Allocation.deleteMany({}),
     Transfer.deleteMany({}),
     MaintenanceRequest.deleteMany({}),
+    Booking.deleteMany({}),
+    AuditCycle.deleteMany({}),
     ActivityLog.deleteMany({}),
     Notification.deleteMany({}),
   ]);
@@ -196,11 +200,39 @@ async function seed() {
       customFieldValues: { 'Warranty (months)': 12 },
       isBookable: false,
     },
+    {
+      name: 'Conference Room B2',
+      category: furnitureCategory._id,
+      assetTag: 'AF-0410',
+      serialNumber: 'ROOM-B2',
+      acquisitionDate: new Date('2020-01-01'),
+      acquisitionCost: 0,
+      condition: 'Good',
+      location: 'HQ Floor 2',
+      department: hq._id,
+      status: 'Available',
+      customFieldValues: {},
+      isBookable: true, // a bookable resource for Screen 6
+    },
+    {
+      name: 'Toyota Innova (Fleet)',
+      category: furnitureCategory._id,
+      assetTag: 'AF-0450',
+      serialNumber: 'KA01-INV-9',
+      acquisitionDate: new Date('2019-08-01'), // old → nearing retirement in reports
+      acquisitionCost: 1800000,
+      condition: 'Good',
+      location: 'Basement Parking',
+      department: hq._id,
+      status: 'Available',
+      customFieldValues: {},
+      isBookable: true,
+    },
   ]);
-  console.log('✓ 6 assets');
+  console.log('✓ 8 assets (2 bookable resources)');
 
-  await Counter.updateOne({ _id: 'assetTag' }, { $set: { seq: 320 } });
-  console.log('✓ Counter set past highest tag (AF-0320)');
+  await Counter.updateOne({ _id: 'assetTag' }, { $set: { seq: 450 } });
+  console.log('✓ Counter set past highest tag (AF-0450)');
 
   // --- Allocations (Module 4) ---
   const dell = assets.find((a) => a.assetTag === 'AF-0012'); // held by employee1
@@ -345,6 +377,54 @@ async function seed() {
     },
   ]);
   console.log('✓ 5 maintenance requests');
+
+  // --- Bookings (Resource Booking / Screen 6) ---
+  const room = assets.find((a) => a.assetTag === 'AF-0410'); // Conference Room B2
+  // Two non-overlapping slots today so the day rail has blocks; a demo user can
+  // then try 9:30–10:30 to hit the overlap 409.
+  const at = (h, m = 0) => {
+    const d = new Date();
+    d.setHours(h, m, 0, 0);
+    return d;
+  };
+  await Booking.create([
+    {
+      resource: room._id,
+      bookedBy: employee1._id,
+      purpose: 'Procurement Team',
+      startTime: at(9, 0),
+      endTime: at(10, 0),
+      status: 'Upcoming',
+    },
+    {
+      resource: room._id,
+      bookedBy: employee2._id,
+      purpose: 'Design Review',
+      startTime: at(14, 0),
+      endTime: at(15, 0),
+      status: 'Upcoming',
+    },
+  ]);
+  console.log('✓ 2 bookings on Conference Room B2 (9–10, 14–15)');
+
+  // --- Audit cycle (Screen 8), Open, scoped to Engineering, items Pending ---
+  const engAssets = assets.filter((a) => String(a.department) === String(engineering._id));
+  await AuditCycle.create({
+    title: 'Q3 Audit — Engineering',
+    scopeType: 'department',
+    department: engineering._id,
+    startDate: daysFromNow(-2),
+    endDate: daysFromNow(13),
+    auditors: [manager._id, head._id],
+    status: 'Open',
+    items: engAssets.map((a) => ({
+      asset: a._id,
+      expectedLocation: a.location || '',
+      mark: 'Pending',
+      note: '',
+    })),
+  });
+  console.log(`✓ 1 open audit cycle (${engAssets.length} items to verify)`);
 
   // --- Activity Logs (Module 6) ---
   // Seed recent activity matching the mockups

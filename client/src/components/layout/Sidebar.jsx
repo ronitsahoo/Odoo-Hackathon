@@ -20,14 +20,14 @@ import { useAuthStore } from '../../store/authStore.js';
  * setup (see pages/admin/OrganizationSetup.jsx).
  */
 const NAV = [
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/admin/organization', label: 'Organization setup', icon: Building2, adminOnly: true },
   { to: '/assets', label: 'Assets', icon: Boxes },
   { to: '/allocation', label: 'Allocation & Transfer', icon: ArrowLeftRight },
   { to: '/booking', label: 'Resource Booking', icon: CalendarClock },
   { to: '/maintenance', label: 'Maintenance', icon: Wrench },
   { to: '/audit', label: 'Audit', icon: ClipboardList },
-  { to: '/reports', label: 'Reports', icon: BarChart3 },
+  { to: '/reports', label: 'Reports', icon: BarChart3, roles: ['asset_manager', 'admin'] },
   { to: '/notifications', label: 'Notifications', icon: Bell },
 ];
 
@@ -40,8 +40,8 @@ const linkCls = ({ isActive }) =>
 function NavList({ items, onNavigate }) {
   return (
     <nav className="flex flex-col gap-1" onClick={onNavigate}>
-      {items.map(({ to, label, icon: Icon }) => (
-        <NavLink key={to} to={to} className={linkCls}>
+      {items.map(({ to, label, icon: Icon, end }) => (
+        <NavLink key={to} to={to} end={end} className={linkCls}>
           <Icon size={18} /> {label}
         </NavLink>
       ))}
@@ -65,8 +65,14 @@ function Brand() {
 export default function Sidebar({ open, onClose }) {
   const { user, isAdmin } = useAuthStore();
 
-  // Only signed-in users see the app nav; admin-only items are gated by role.
-  const items = user ? NAV.filter((i) => !i.adminOnly || isAdmin()) : [];
+  // Only signed-in users see the app nav; role-gated items filtered accordingly.
+  const items = user
+    ? NAV.filter((i) => {
+        if (i.adminOnly && !isAdmin()) return false;
+        if (i.roles && !i.roles.includes(user.role)) return false;
+        return true;
+      })
+    : [];
 
   return (
     <>

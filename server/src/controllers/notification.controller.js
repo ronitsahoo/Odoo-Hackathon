@@ -4,12 +4,34 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { emitNotification } from '../sockets/index.js';
 
 /**
+ * Map a domain event type to a Screen-10 notification category. Callers pass a
+ * readable domain type ('allocation', 'transfer', 'overdue', 'booking', …);
+ * this collapses it to the stored enum (info | alert | approval | booking) so
+ * the tabs (All · Alerts · Approvals · Bookings) group correctly and the
+ * Notification schema's enum validation never rejects the write.
+ */
+const TYPE_CATEGORY = {
+  info: 'info',
+  alert: 'alert',
+  approval: 'approval',
+  booking: 'booking',
+  // domain aliases
+  allocation: 'info', // "asset assigned/returned" → general
+  overdue: 'alert',
+  audit: 'alert',
+  transfer: 'approval',
+  maintenance: 'approval',
+  broadcast: 'info',
+};
+
+/**
  * Create a notification and push it to the recipient's socket room in one call.
- * Reused by the request workflow and admin broadcasts — import this instead of
- * duplicating the create+emit dance.
+ * Reused by every module's side-effects — import this instead of duplicating
+ * the create+emit dance.
  */
 export async function notify({ user, type = 'info', message, link = '' }) {
-  const notification = await Notification.create({ user, type, message, link });
+  const category = TYPE_CATEGORY[type] || 'info';
+  const notification = await Notification.create({ user, type: category, message, link });
   emitNotification(user.toString(), notification);
   return notification;
 }

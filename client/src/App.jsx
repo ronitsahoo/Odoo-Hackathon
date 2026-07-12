@@ -10,7 +10,6 @@ import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Profile from './pages/Profile.jsx';
-import Placeholder from './pages/Placeholder.jsx';
 import Notifications from './pages/Notifications.jsx';
 import AdminDashboard from './pages/admin/AdminDashboard.jsx';
 import OrganizationSetup from './pages/admin/OrganizationSetup.jsx';
@@ -28,6 +27,10 @@ import EditAsset from './pages/asset/EditAsset.jsx';
 import Allocation from './pages/asset/Allocation.jsx';
 // Module 5: Maintenance
 import Maintenance from './pages/asset/Maintenance.jsx';
+// Final build: Booking (Screen 6), Audit (Screen 8), Reports (Screen 9)
+import Booking from './pages/asset/Booking.jsx';
+import Audit from './pages/asset/Audit.jsx';
+import Reports from './pages/asset/Reports.jsx';
 
 /**
  * Route table. All pages share the Layout shell. Auth pages (Login/Register)
@@ -118,22 +121,33 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        {/* Remaining modules — placeholders */}
-        {[
-          { path: '/booking', title: 'Resource Booking' },
-          { path: '/audit', title: 'Audit' },
-          { path: '/reports', title: 'Reports' },
-        ].map(({ path, title }) => (
-          <Route
-            key={path}
-            path={path}
-            element={
-              <ProtectedRoute>
-                <Placeholder title={title} />
-              </ProtectedRoute>
-            }
-          />
-        ))}
+        {/* Resource Booking (Screen 6) */}
+        <Route
+          path="/booking"
+          element={
+            <ProtectedRoute>
+              <Booking />
+            </ProtectedRoute>
+          }
+        />
+        {/* Audit (Screen 8) */}
+        <Route
+          path="/audit"
+          element={
+            <ProtectedRoute>
+              <Audit />
+            </ProtectedRoute>
+          }
+        />
+        {/* Reports (Screen 9) — managers/admins */}
+        <Route
+          path="/reports"
+          element={
+            <RoleRoute roles={['asset_manager', 'admin']}>
+              <Reports />
+            </RoleRoute>
+          }
+        />
         {/* Module 6: Notifications (complete) */}
         <Route
           path="/notifications"

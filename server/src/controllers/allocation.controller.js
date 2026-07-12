@@ -5,6 +5,7 @@ import { Department } from '../models/Department.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { notify } from './notification.controller.js';
+import { logActivity } from '../utils/activityLogger.js';
 import { emitAssetUpdated } from '../sockets/index.js';
 
 /**
@@ -83,6 +84,13 @@ export const allocate = asyncHandler(async (req, res) => {
     message: `You were allocated "${asset.name}" (${asset.assetTag})`,
     link: '/allocation',
   });
+  await logActivity({
+    actor: req.user._id,
+    action: 'asset.allocated',
+    summary: `${asset.name} ${asset.assetTag} allocated to ${holder.name}${deptName ? ` — ${deptName}` : ''}`,
+    entityType: 'Allocation',
+    entityId: asset._id,
+  });
   emitAssetUpdated(asset);
 
   res.status(201).json({ success: true, data: { asset } });
@@ -137,6 +145,13 @@ export const returnAsset = asyncHandler(async (req, res) => {
       link: '/allocation',
     });
   }
+  await logActivity({
+    actor: req.user._id,
+    action: 'asset.returned',
+    summary: `${asset.name} ${asset.assetTag} returned by ${holderName}${checkInCondition ? ` — condition: ${checkInCondition}` : ''}`,
+    entityType: 'Allocation',
+    entityId: asset._id,
+  });
   emitAssetUpdated(asset);
 
   res.json({ success: true, data: { asset } });

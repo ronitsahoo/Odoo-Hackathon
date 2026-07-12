@@ -85,3 +85,10 @@ export const emitMaintenanceCreated = (mr) =>
   getIO().to('maintenance').emit('maintenance:created', mr);
 export const emitMaintenanceUpdated = (mr) =>
   getIO().to('maintenance').emit('maintenance:updated', mr);
+
+// --- Booking emit helpers (Module 7 / Booking) ---
+export const emitBookingCreated = (b) => getIO().to('assets').emit('booking:created', b);
+export const emitBookingUpdated = (b) => getIO().to('assets').emit('booking:updated', b);
+
+// --- Activity feed (Module 6): signals the dashboard to refresh its feed. ---
+export const emitActivity = (log) => getIO().to('assets').emit('activity:new', log);
