@@ -1,122 +1,51 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Boxes, ArrowLeftRight, Wrench, AlertCircle, Plus, CalendarClock } from 'lucide-react';
-import api from '../api/axios.js';
+import { Plus, CalendarClock, Wrench, AlertCircle, Activity } from 'lucide-react';
+import { useDashboardStore } from '../store/dashboardStore.js';
+import { useSocket } from '../hooks/useSocket.js';
+import { relativeTime } from '../utils/timeUtils.js';
 import Card from '../components/ui/Card.jsx';
-import Button from '../components/ui/Button.jsx';
 import Loader from '../components/ui/Loader.jsx';
 
+/**
+ * Dashboard (Screen 2, Module 6) — AssetFlow post-login landing page.
+ * Shows 6 KPI cards, overdue banner, quick actions, and recent activity feed.
+ * Updates live via socket events.
+ */
 export default function Dashboard() {
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    available: 0,
-    allocated: 0,
-    maintenance: 0,
-    activeBookings: 0, // Placeholder
-    pendingTransfers: 0,
-    upcomingReturns: 0,
-  });
-  const [overdueAllocations, setOverdueAllocations] = useState([]);
-  const [recentActivity, setRecentActivity] = useState([]);
+  const { summary, loading, fetchSummary, updateKPI, prependActivity } = useDashboardStore();
 
   useEffect(() => {
-    async function fetchDashboardData() {
-      try {
-        setLoading(true);
-        // Fetch data concurrently where possible
-        const [
-          { data: assetsRes },
-          { data: allocationsRes },
-          { data: maintenanceRes },
-          { data: transfersRes }
-        ] = await Promise.all([
-          api.get('/assets'),
-          api.get('/allocations'),
-          api.get('/maintenance'),
-          api.get('/transfers')
-        ]);
+    fetchSummary();
+  }, [fetchSummary]);
 
-        const assets = assetsRes.data.assets || [];
-        const allocations = allocationsRes.data.allocations || [];
-        const maintenanceReqs = maintenanceRes.data.requests || [];
-        const transfers = transfersRes.data.transfers || [];
+  // Subscribe to real-time updates (asset/allocation/maintenance events)
+  useSocket('asset:created', () => updateKPI('assetsAvailable', 1));
+  useSocket('asset:updated', (asset) => {
+    // Recalculate KPI deltas based on status change (simplified)
+    fetchSummary();
+  });
+  useSocket('maintenance:created', () => fetchSummary());
+  useSocket('maintenance:updated', () => fetchSummary());
 
-        // Compute KPIs
-        const available = assets.filter(a => a.status === 'Available').length;
-        const allocated = assets.filter(a => a.status === 'Allocated').length;
-        const maintenance = assets.filter(a => a.status === 'Under Maintenance').length;
-        
-        const pendingTransfers = transfers.filter(t => t.status === 'Pending').length;
-        
-        const now = new Date();
-        const activeAllocations = allocations.filter(a => a.status === 'active');
-        const upcomingReturns = activeAllocations.filter(a => {
-          if (!a.expectedReturnDate) return false;
-          const returnDate = new Date(a.expectedReturnDate);
-          return returnDate > now && (returnDate - now) < 7 * 24 * 60 * 60 * 1000; // Next 7 days
-        }).length;
-
-        const overdue = activeAllocations.filter(a => {
-          if (!a.expectedReturnDate) return false;
-          return new Date(a.expectedReturnDate) < now;
-        });
-
-        setStats({
-          available,
-          allocated,
-          maintenance,
-          activeBookings: 0, // Bookings not yet built
-          pendingTransfers,
-          upcomingReturns,
-        });
-
-        setOverdueAllocations(overdue);
-
-        // Build a mock recent activity list from allocations and maintenance
-        const activity = [];
-        allocations.slice(0, 3).forEach(a => {
-          activity.push({
-            id: `alloc-${a._id}`,
-            title: `Asset Allocated: ${a.asset?.name}`,
-            date: new Date(a.allocatedDate || a.createdAt),
-            type: 'allocation'
-          });
-        });
-        maintenanceReqs.slice(0, 3).forEach(m => {
-          activity.push({
-            id: `maint-${m._id}`,
-            title: `Maintenance Logged: ${m.asset?.name}`,
-            date: new Date(m.createdAt),
-            type: 'maintenance'
-          });
-        });
-        
-        activity.sort((a, b) => b.date - a.date);
-        setRecentActivity(activity.slice(0, 5));
-
-      } catch (err) {
-        console.error('Failed to load dashboard data', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchDashboardData();
-  }, []);
-
-  if (loading) {
+  if (loading || !summary) {
     return <Loader label="Loading dashboard..." />;
   }
+
+  const { counts, overdueReturns, recentActivity } = summary;
 
   return (
     <div className="space-y-8">
       {/* Overdue Banner */}
-      {overdueAllocations.length > 0 && (
-        <div className="flex items-center gap-3 rounded-lg bg-red-50 p-4 text-red-700 border border-red-200">
+      {overdueReturns.count > 0 && (
+        <div className="flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">
           <AlertCircle size={24} className="shrink-0" />
           <div>
-            <h3 className="font-bold">Overdue Returns</h3>
-            <p className="text-sm">You have {overdueAllocations.length} asset(s) that are past their expected return date.</p>
+            <h3 className="font-semibold">Overdue Returns</h3>
+            <p className="text-sm">
+              {overdueReturns.count} asset{overdueReturns.count > 1 ? 's' : ''} overdue for return
+              — flagged for follow-up
+            </p>
           </div>
         </div>
       )}
@@ -125,12 +54,12 @@ export default function Dashboard() {
       <section>
         <h1 className="mb-4 text-2xl font-bold text-slate-900">Today's Overview</h1>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-          <KpiCard title="Available" value={stats.available} color="text-green-600" />
-          <KpiCard title="Allocated" value={stats.allocated} color="text-brand-600" />
-          <KpiCard title="Maintenance" value={stats.maintenance} color="text-orange-600" />
-          <KpiCard title="Active Bookings" value={stats.activeBookings} color="text-slate-600" />
-          <KpiCard title="Pending Transfers" value={stats.pendingTransfers} color="text-blue-600" />
-          <KpiCard title="Upcoming Returns" value={stats.upcomingReturns} color="text-purple-600" />
+          <KpiCard title="Available" value={counts.assetsAvailable} color="text-green-600" />
+          <KpiCard title="Allocated" value={counts.assetsAllocated} color="text-brand-600" />
+          <KpiCard title="Maintenance" value={counts.maintenanceToday} color="text-orange-600" />
+          <KpiCard title="Active Bookings" value={counts.activeBookings} color="text-slate-600" />
+          <KpiCard title="Pending Transfers" value={counts.pendingTransfers} color="text-blue-600" />
+          <KpiCard title="Upcoming Returns" value={counts.upcomingReturns} color="text-purple-600" />
         </div>
       </section>
 
@@ -140,7 +69,7 @@ export default function Dashboard() {
           <h2 className="mb-4 text-xl font-bold text-slate-900">Quick Actions</h2>
           <div className="flex flex-col gap-3">
             <Link to="/assets/register">
-              <Card className="flex items-center gap-3 hover:bg-slate-50 transition cursor-pointer">
+              <Card className="flex cursor-pointer items-center gap-3 transition hover:bg-slate-50">
                 <div className="rounded-full bg-brand-100 p-2 text-brand-600">
                   <Plus size={20} />
                 </div>
@@ -148,7 +77,7 @@ export default function Dashboard() {
               </Card>
             </Link>
             <Link to="/booking">
-              <Card className="flex items-center gap-3 hover:bg-slate-50 transition cursor-pointer">
+              <Card className="flex cursor-pointer items-center gap-3 transition hover:bg-slate-50">
                 <div className="rounded-full bg-blue-100 p-2 text-blue-600">
                   <CalendarClock size={20} />
                 </div>
@@ -156,7 +85,7 @@ export default function Dashboard() {
               </Card>
             </Link>
             <Link to="/maintenance">
-              <Card className="flex items-center gap-3 hover:bg-slate-50 transition cursor-pointer">
+              <Card className="flex cursor-pointer items-center gap-3 transition hover:bg-slate-50">
                 <div className="rounded-full bg-orange-100 p-2 text-orange-600">
                   <Wrench size={20} />
                 </div>
@@ -171,21 +100,25 @@ export default function Dashboard() {
           <h2 className="mb-4 text-xl font-bold text-slate-900">Recent Activity</h2>
           <Card className="min-h-[250px]">
             {recentActivity.length === 0 ? (
-              <div className="flex h-full flex-col items-center justify-center text-slate-500 py-10">
-                <p>No recent activity found.</p>
+              <div className="flex h-full flex-col items-center justify-center py-10 text-slate-500">
+                <Activity size={48} className="mb-2 text-slate-300" />
+                <p>No recent activity</p>
               </div>
             ) : (
               <ul className="divide-y divide-slate-100">
-                {recentActivity.map((act) => (
-                  <li key={act.id} className="py-3 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="rounded-full bg-slate-100 p-2 text-slate-500">
-                        {act.type === 'allocation' ? <ArrowLeftRight size={16} /> : <Wrench size={16} />}
+                {recentActivity.map((log) => (
+                  <li key={log._id} className="flex items-start justify-between gap-3 py-3">
+                    <div className="flex items-start gap-3">
+                      <div className="mt-0.5 rounded-full bg-slate-100 p-2 text-slate-600">
+                        <Activity size={14} />
                       </div>
-                      <span className="font-medium text-slate-800">{act.title}</span>
+                      <div>
+                        <p className="text-sm font-medium text-slate-800">{log.summary}</p>
+                        <p className="text-xs text-slate-500">by {log.actor}</p>
+                      </div>
                     </div>
-                    <span className="text-sm text-slate-400">
-                      {act.date.toLocaleDateString()}
+                    <span className="shrink-0 text-xs text-slate-400">
+                      {relativeTime(log.createdAt)}
                     </span>
                   </li>
                 ))}

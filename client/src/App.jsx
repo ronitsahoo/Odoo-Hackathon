@@ -11,6 +11,7 @@ import Register from './pages/Register.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Profile from './pages/Profile.jsx';
 import Placeholder from './pages/Placeholder.jsx';
+import Notifications from './pages/Notifications.jsx';
 import AdminDashboard from './pages/admin/AdminDashboard.jsx';
 import OrganizationSetup from './pages/admin/OrganizationSetup.jsx';
 import EmployeeDirectory from './pages/admin/EmployeeDirectory.jsx';
@@ -122,7 +123,6 @@ export default function App() {
           { path: '/booking', title: 'Resource Booking' },
           { path: '/audit', title: 'Audit' },
           { path: '/reports', title: 'Reports' },
-          { path: '/notifications', title: 'Notifications' },
         ].map(({ path, title }) => (
           <Route
             key={path}
@@ -134,6 +134,15 @@ export default function App() {
             }
           />
         ))}
+        {/* Module 6: Notifications (complete) */}
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <Notifications />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Admin */}
         <Route

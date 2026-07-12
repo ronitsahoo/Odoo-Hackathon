@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Bell, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useNotificationStore } from '../store/notificationStore.js';
+import { relativeTime } from '../utils/timeUtils.js';
 
 /**
  * Navbar bell: unread badge + dropdown list, updated in real time.
@@ -75,7 +76,7 @@ export default function NotificationBell() {
                 >
                   <span className="text-sm text-slate-700">{n.message}</span>
                   <span className="text-[11px] text-slate-400">
-                    {new Date(n.createdAt).toLocaleString()}
+                    {relativeTime(n.createdAt)}
                   </span>
                 </button>
               ))

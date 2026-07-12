@@ -7,7 +7,7 @@ export default function NotFound() {
       <p className="text-5xl font-bold text-brand-600">404</p>
       <p className="text-slate-500">This page doesn't exist.</p>
       <Link to="/">
-        <Button>Back to browse</Button>
+        <Button>Back to Dashboard</Button>
       </Link>
     </div>
   );
