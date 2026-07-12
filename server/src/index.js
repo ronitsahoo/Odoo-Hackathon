@@ -12,9 +12,6 @@ import { notFound, errorHandler } from './middleware/error.middleware.js';
 
 import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
-import itemRoutes from './routes/item.routes.js';
-import commentRoutes from './routes/comment.routes.js';
-import requestRoutes from './routes/request.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import departmentRoutes from './routes/department.routes.js';
@@ -48,9 +45,6 @@ app.get('/api/health', (req, res) =>
 // --- API routes (route -> controller -> model) ---
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/items', itemRoutes);
-app.use('/api/comments', commentRoutes);
-app.use('/api/requests', requestRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/departments', departmentRoutes);

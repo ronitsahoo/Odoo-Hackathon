@@ -6,11 +6,8 @@ import Layout from './components/layout/Layout.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import RoleRoute from './components/RoleRoute.jsx';
 
-import Home from './pages/Home.jsx';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
-import ItemDetail from './pages/ItemDetail.jsx';
-import CreateEditItem from './pages/CreateEditItem.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Profile from './pages/Profile.jsx';
 import Placeholder from './pages/Placeholder.jsx';
@@ -19,7 +16,6 @@ import OrganizationSetup from './pages/admin/OrganizationSetup.jsx';
 import EmployeeDirectory from './pages/admin/EmployeeDirectory.jsx';
 import DepartmentsTab from './pages/admin/DepartmentsTab.jsx';
 import CategoriesTab from './pages/admin/CategoriesTab.jsx';
-import AdminModeration from './pages/admin/AdminModeration.jsx';
 import AdminBroadcast from './pages/admin/AdminBroadcast.jsx';
 import NotFound from './pages/NotFound.jsx';
 // Module 3: Asset pages
@@ -46,37 +42,20 @@ export default function App() {
   return (
     <Routes>
       <Route element={<Layout />}>
-        {/* Public */}
-        <Route path="/" element={<Home />} />
+        {/* Public (Login/Register). Unauthenticated hits to / redirect here via ProtectedRoute */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/items/:id" element={<ItemDetail />} />
 
-        {/* Authenticated */}
+        {/* Authenticated Root & Dashboard */}
         <Route
-          path="/items/new"
-          element={
-            <ProtectedRoute>
-              <CreateEditItem />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/items/:id/edit"
-          element={
-            <ProtectedRoute>
-              <CreateEditItem />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/dashboard"
+          path="/"
           element={
             <ProtectedRoute>
               <Dashboard />
             </ProtectedRoute>
           }
         />
+        <Route path="/dashboard" element={<Navigate to="/" replace />} />
         <Route
           path="/profile"
           element={
@@ -179,14 +158,7 @@ export default function App() {
           <Route path="categories" element={<CategoriesTab />} />
           <Route path="employees" element={<EmployeeDirectory />} />
         </Route>
-        <Route
-          path="/admin/moderation"
-          element={
-            <RoleRoute>
-              <AdminModeration />
-            </RoleRoute>
-          }
-        />
+
         <Route
           path="/admin/broadcast"
           element={

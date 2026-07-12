@@ -6,11 +6,10 @@ import { User } from '../models/User.js';
  * can emit without threading `io` through every function call.
  *
  * Rooms:
- *   - `items`        : everyone browsing; receives item:created/updated/deleted
- *                      and comment:created for live lists & threads.
- *   - `item:<id>`    : viewers of a single item's detail page.
  *   - `user:<id>`    : a private room per authenticated user for targeted
  *                      notifications (request updates, admin broadcasts).
+ *   - `assets`       : shared assets feed
+ *   - `maintenance`  : shared maintenance board feed
  */
 let io = null;
 
@@ -41,9 +40,6 @@ export function initSockets(server, corsOrigin) {
     });
 
     io.on('connection', (socket) => {
-      // Everyone watches the shared items feed.
-      socket.join('items');
-
       // Everyone watches the shared assets feed (Module 3).
       socket.join('assets');
 
@@ -53,9 +49,7 @@ export function initSockets(server, corsOrigin) {
       // Authenticated users get their private notification room.
       if (socket.userId) socket.join(`user:${socket.userId}`);
 
-      // Detail pages join/leave a per-item room for live comment threads.
-      socket.on('item:join', (itemId) => itemId && socket.join(`item:${itemId}`));
-      socket.on('item:leave', (itemId) => itemId && socket.leave(`item:${itemId}`));
+
 
       socket.on('disconnect', () => {
         /* rooms are cleaned up automatically */
@@ -74,18 +68,7 @@ export function getIO() {
 
 // --- Named emit helpers so controllers read clearly ------------------------
 
-export const emitItemCreated = (item) => getIO().to('items').emit('item:created', item);
-export const emitItemUpdated = (item) => {
-  getIO().to('items').emit('item:updated', item);
-  getIO().to(`item:${item._id}`).emit('item:updated', item);
-};
-export const emitItemDeleted = (itemId) =>
-  getIO().to('items').emit('item:deleted', { id: itemId.toString() });
 
-export const emitCommentCreated = (comment) =>
-  getIO().to(`item:${comment.item}`).emit('comment:created', comment);
-export const emitCommentUpdated = (comment) =>
-  getIO().to(`item:${comment.item}`).emit('comment:updated', comment);
 
 /** Push a notification to a single user's private room. */
 export const emitNotification = (userId, notification) =>

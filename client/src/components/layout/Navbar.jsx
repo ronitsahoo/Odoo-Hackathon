@@ -36,9 +36,7 @@ export default function Navbar({ onMenu }) {
         <div className="ml-auto flex items-center gap-3">
           {user ? (
             <>
-              <Link to="/items/new" className={`${btn.base} ${btn.primary} ${btn.sm}`}>
-                <Plus size={16} /> <span className="hidden sm:inline">Create</span>
-              </Link>
+
               <NotificationBell />
               <Link
                 to="/profile"

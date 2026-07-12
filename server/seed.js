@@ -2,10 +2,6 @@ import 'dotenv/config';
 import mongoose from 'mongoose';
 import { connectDB } from './src/config/db.js';
 import { User } from './src/models/User.js';
-import { Item } from './src/models/Item.js';
-import { Comment } from './src/models/Comment.js';
-import { Request } from './src/models/Request.js';
-import { Notification } from './src/models/Notification.js';
 import { Department } from './src/models/Department.js';
 import { AssetCategory } from './src/models/AssetCategory.js';
 import { Asset } from './src/models/Asset.js';
@@ -15,19 +11,14 @@ import { Transfer } from './src/models/Transfer.js';
 import { MaintenanceRequest } from './src/models/MaintenanceRequest.js';
 
 /**
- * Wipe and reseed the database with a demo dataset that exercises every feature:
- * an admin, two users, approved + pending items, a comment, a pending request,
- * and a notification. Run with: npm run seed
+ * Wipe and reseed the database with a demo dataset for AssetFlow.
+ * Run with: npm run seed
  */
 async function seed() {
   await connectDB();
   console.log('… clearing existing data');
   await Promise.all([
     User.deleteMany({}),
-    Item.deleteMany({}),
-    Comment.deleteMany({}),
-    Request.deleteMany({}),
-    Notification.deleteMany({}),
     Department.deleteMany({}),
     AssetCategory.deleteMany({}),
     Asset.deleteMany({}),
@@ -37,9 +28,7 @@ async function seed() {
     MaintenanceRequest.deleteMany({}),
   ]);
 
-  // --- Users (password hashing happens in the User pre-save hook) ---
-  // One of every role + a deactivated employee, so RBAC and the status gate
-  // both have something to demonstrate. Department stays null until Module 2.
+  // --- Users ---
   const admin = await User.create({
     name: 'Admin',
     email: 'admin@demo.com',
@@ -61,29 +50,21 @@ async function seed() {
     role: 'dept_head',
     bio: 'Runs a department.',
   });
-  const demo = await User.create({
-    name: 'Demo User',
-    email: 'demo@demo.com',
-    password: 'demo1234',
+  const employee1 = await User.create({
+    name: 'Employee One',
+    email: 'employee1@demo.com',
+    password: 'employee123',
     role: 'employee',
-    bio: 'Just here to test the template.',
+    bio: 'Asset user.',
   });
-  const priya = await User.create({
-    name: 'Priya Sharma',
-    email: 'priya@demo.com',
-    password: 'priya1234',
+  const employee2 = await User.create({
+    name: 'Employee Two',
+    email: 'employee2@demo.com',
+    password: 'employee123',
     role: 'employee',
-    bio: 'Builds things at hackathons.',
+    bio: 'Asset user.',
   });
-  await User.create({
-    name: 'Sam Inactive',
-    email: 'inactive@demo.com',
-    password: 'inactive1234',
-    role: 'employee',
-    status: 'inactive', // cannot log in until an admin reactivates
-    bio: 'Deactivated account for testing the status gate.',
-  });
-  console.log('✓ 6 users (admin, asset_manager, dept_head, 3 employees; 1 inactive)');
+  console.log('✓ 5 users (admin, asset_manager, dept_head, 2 employees)');
 
   // --- Departments ---
   const hq = await Department.create({
@@ -97,11 +78,7 @@ async function seed() {
     parentDepartment: hq._id,
     status: 'active',
   });
-  await Department.create({
-    name: 'Marketing',
-    status: 'inactive',
-  });
-  console.log('✓ 3 departments (HQ, Engineering with parent, Marketing inactive)');
+  console.log('✓ 2 departments (HQ, Engineering)');
 
   // --- Asset Categories ---
   const electronicsCategory = await AssetCategory.create({
@@ -114,95 +91,18 @@ async function seed() {
     customFields: [],
     status: 'active',
   });
-  await AssetCategory.create({
-    name: 'Vehicles',
-    customFields: [{ label: 'License Plate', type: 'text' }],
-    status: 'inactive',
-  });
-  console.log('✓ 3 asset categories (Electronics with custom field, Furniture, Vehicles inactive)');
+  console.log('✓ 2 asset categories');
 
   // --- Assign departments to employees ---
   head.department = engineering._id;
   await head.save();
-  demo.department = hq._id;
-  await demo.save();
-  priya.department = hq._id;
-  await priya.save();
+  employee1.department = hq._id;
+  await employee1.save();
+  employee2.department = hq._id;
+  await employee2.save();
   console.log('✓ Departments assigned to employees');
 
-  // --- Items (mix of statuses so moderation queue + Home both have content) ---
-  const items = await Item.create([
-    {
-      title: 'How do I paginate a MongoDB text search?',
-      description:
-        '<p>I have a text index and want <strong>page + limit</strong> pagination. What is the cleanest Mongoose approach?</p>',
-      category: 'Question',
-      tags: ['mongodb', 'mongoose', 'search'],
-      owner: demo._id,
-      status: 'approved',
-    },
-    {
-      title: 'Vintage denim jacket — size M',
-      description: '<p>Barely worn denim jacket. Looking to swap for a hoodie.</p>',
-      category: 'Clothing',
-      tags: ['denim', 'jacket', 'swap'],
-      owner: priya._id,
-      status: 'approved',
-    },
-    {
-      title: 'Login button unresponsive on Safari',
-      description: '<p>The login button does nothing on Safari 17. Console shows no errors.</p>',
-      category: 'Bug',
-      tags: ['safari', 'auth'],
-      owner: demo._id,
-      status: 'pending', // shows up in the admin moderation queue
-    },
-    {
-      title: 'Tennis court — Saturday 4pm slot',
-      description: '<p>Court #3 available Saturday afternoon. Book a slot.</p>',
-      category: 'Booking',
-      tags: ['tennis', 'court'],
-      owner: priya._id,
-      status: 'approved',
-      location: { lat: 28.6139, lng: 77.209 },
-    },
-  ]);
-  console.log(`✓ ${items.length} items (3 approved, 1 pending)`);
-
-  // Give the first item a couple of votes.
-  items[0].upvotes = [priya._id, admin._id];
-  await items[0].save();
-
-  // --- A comment / answer on the first question ---
-  await Comment.create({
-    item: items[0]._id,
-    author: priya._id,
-    body: '<p>Use <code>.skip((page-1)*limit).limit(limit)</code> with a <code>$text</code> filter and count in parallel.</p>',
-    upvotes: [demo._id],
-    isAccepted: true,
-  });
-  console.log('✓ 1 accepted answer');
-
-  // --- A pending request from demo -> priya on the denim jacket ---
-  const request = await Request.create({
-    item: items[1]._id,
-    fromUser: demo._id,
-    toUser: priya._id,
-    message: 'Would you swap the jacket for a grey hoodie (size M)?',
-    status: 'pending',
-  });
-
-  // --- A notification for priya about that request ---
-  await Notification.create({
-    user: priya._id,
-    type: 'request',
-    message: 'Demo User sent a request on "Vintage denim jacket — size M"',
-    link: '/dashboard',
-  });
-  console.log('✓ 1 request + 1 notification');
-
   // --- Assets (Module 3) with varied statuses and locations ---
-  // Seed the counter first so tags start at AF-0012
   await Counter.create({ _id: 'assetTag', seq: 11 });
 
   const assets = await Asset.create([
@@ -217,7 +117,7 @@ async function seed() {
       location: 'Bengaluru Office',
       department: engineering._id,
       status: 'Allocated',
-      currentHolder: demo._id,
+      currentHolder: employee1._id,
       customFieldValues: { 'Warranty (months)': 24 },
       isBookable: false,
     },
@@ -274,7 +174,7 @@ async function seed() {
       location: 'Bengaluru Office - Desk 15',
       department: engineering._id,
       status: 'Allocated',
-      currentHolder: priya._id,
+      currentHolder: employee2._id,
       customFieldValues: {},
       isBookable: false,
     },
@@ -293,37 +193,34 @@ async function seed() {
       isBookable: false,
     },
   ]);
-  console.log('✓ 6 assets (varied statuses: Allocated, Under Maintenance, Available, Reserved)');
+  console.log('✓ 6 assets');
 
-  // Update counter to reflect the highest seeded tag
   await Counter.updateOne({ _id: 'assetTag' }, { $set: { seq: 320 } });
   console.log('✓ Counter set past highest tag (AF-0320)');
 
   // --- Allocations (Module 4) ---
-  // Index by tag for clarity. Seeded assets AF-0012 (demo) and AF-0154 (priya)
-  // are already 'Allocated' from Module 3 — give them matching custody records.
-  const dell = assets.find((a) => a.assetTag === 'AF-0012'); // held by demo
-  const desk = assets.find((a) => a.assetTag === 'AF-0154'); // held by priya
-  const chair = assets.find((a) => a.assetTag === 'AF-0201'); // Available (has prior return)
+  const dell = assets.find((a) => a.assetTag === 'AF-0012'); // held by employee1
+  const desk = assets.find((a) => a.assetTag === 'AF-0154'); // held by employee2
+  const chair = assets.find((a) => a.assetTag === 'AF-0201'); // Available
 
   const daysFromNow = (n) => new Date(Date.now() + n * 24 * 60 * 60 * 1000);
 
-  // 1) OVERDUE active allocation: Dell → demo, expected back a week ago.
+  // 1) OVERDUE active allocation
   await Allocation.create({
     asset: dell._id,
-    holder: demo._id,
+    holder: employee1._id,
     holderDept: engineering._id,
     allocatedBy: manager._id,
     allocatedDate: daysFromNow(-30),
-    expectedReturnDate: daysFromNow(-7), // past → overdue
+    expectedReturnDate: daysFromNow(-7), // past -> overdue
     status: 'active',
   });
   dell.allocationHistory = [
     {
       action: 'allocated',
       date: daysFromNow(-30),
-      holder: demo._id,
-      holderName: demo.name,
+      holder: employee1._id,
+      holderName: employee1.name,
       dept: engineering._id,
       deptName: engineering.name,
       by: manager._id,
@@ -332,10 +229,10 @@ async function seed() {
   ];
   await dell.save();
 
-  // 2) Active allocation (not overdue): Standing Desk → priya.
+  // 2) Active allocation (not overdue)
   await Allocation.create({
     asset: desk._id,
-    holder: priya._id,
+    holder: employee2._id,
     holderDept: engineering._id,
     allocatedBy: manager._id,
     allocatedDate: daysFromNow(-5),
@@ -346,8 +243,8 @@ async function seed() {
     {
       action: 'allocated',
       date: daysFromNow(-5),
-      holder: priya._id,
-      holderName: priya.name,
+      holder: employee2._id,
+      holderName: employee2.name,
       dept: engineering._id,
       deptName: engineering.name,
       by: manager._id,
@@ -356,11 +253,10 @@ async function seed() {
   ];
   await desk.save();
 
-  // 3) A prior RETURNED allocation on an Available asset so the history panel
-  //    has both an allocate and a return row.
+  // 3) A prior RETURNED allocation
   await Allocation.create({
     asset: chair._id,
-    holder: priya._id,
+    holder: employee2._id,
     holderDept: engineering._id,
     allocatedBy: manager._id,
     allocatedDate: daysFromNow(-60),
@@ -373,8 +269,8 @@ async function seed() {
     {
       action: 'allocated',
       date: daysFromNow(-60),
-      holder: priya._id,
-      holderName: priya.name,
+      holder: employee2._id,
+      holderName: employee2.name,
       dept: engineering._id,
       deptName: engineering.name,
       by: manager._id,
@@ -383,8 +279,8 @@ async function seed() {
     {
       action: 'returned',
       date: daysFromNow(-40),
-      holder: priya._id,
-      holderName: priya.name,
+      holder: employee2._id,
+      holderName: employee2.name,
       condition: 'good',
       notes: 'Returned in working order.',
       by: manager._id,
@@ -394,23 +290,22 @@ async function seed() {
   await chair.save();
   console.log('✓ 3 allocations (1 overdue active, 1 active, 1 prior returned)');
 
-  // --- Maintenance requests (Module 5) spread across the kanban columns ---
-  const projector = assets.find((a) => a.assetTag === 'AF-0062'); // already Under Maintenance
-  const printer = assets.find((a) => a.assetTag === 'AF-0089'); // Available
-  const macbook = assets.find((a) => a.assetTag === 'AF-0320'); // Reserved
+  // --- Maintenance requests (Module 5) ---
+  const projector = assets.find((a) => a.assetTag === 'AF-0062');
+  const printer = assets.find((a) => a.assetTag === 'AF-0089');
+  const macbook = assets.find((a) => a.assetTag === 'AF-0320');
 
   await MaintenanceRequest.create([
     {
       asset: projector._id,
-      raisedBy: priya._id,
+      raisedBy: employee2._id,
       issue: 'Projector bulb not turning on',
       priority: 'high',
       status: 'Pending',
     },
     {
-      // Approved request whose asset is Under Maintenance (AF-0062 seeded so).
       asset: projector._id,
-      raisedBy: demo._id,
+      raisedBy: employee1._id,
       issue: 'AC unit leaking in conf room',
       priority: 'medium',
       status: 'Approved',
@@ -418,7 +313,7 @@ async function seed() {
     },
     {
       asset: printer._id,
-      raisedBy: demo._id,
+      raisedBy: employee1._id,
       issue: 'Forklift hydraulics service',
       priority: 'high',
       status: 'Technician Assigned',
@@ -427,7 +322,7 @@ async function seed() {
     },
     {
       asset: printer._id,
-      raisedBy: priya._id,
+      raisedBy: employee2._id,
       issue: 'Printer jams on duplex — parts ordered',
       priority: 'medium',
       status: 'In Progress',
@@ -436,7 +331,7 @@ async function seed() {
     },
     {
       asset: macbook._id,
-      raisedBy: priya._id,
+      raisedBy: employee2._id,
       issue: 'Office chair wheel repair',
       priority: 'low',
       status: 'Resolved',
@@ -445,15 +340,14 @@ async function seed() {
       resolvedAt: daysFromNow(-2),
     },
   ]);
-  console.log('✓ 5 maintenance requests (Pending → Resolved across the board)');
+  console.log('✓ 5 maintenance requests');
 
   console.log('\n=== SEED COMPLETE ===');
   console.log('Admin         : admin@demo.com   / admin1234');
   console.log('Asset manager : manager@demo.com / manager1234');
   console.log('Dept head     : head@demo.com    / head1234');
-  console.log('Employee      : demo@demo.com    / demo1234');
-  console.log('Employee      : priya@demo.com   / priya1234');
-  console.log('Employee (inactive, cannot log in): inactive@demo.com / inactive1234');
+  console.log('Employee 1    : employee1@demo.com / employee123');
+  console.log('Employee 2    : employee2@demo.com / employee123');
 
   await mongoose.connection.close();
   process.exit(0);

@@ -1,202 +1,210 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import toast from 'react-hot-toast';
-import { Plus, Inbox, Send } from 'lucide-react';
-import api, { apiError } from '../api/axios.js';
-import { useAuthStore } from '../store/authStore.js';
-import { useRequestStore } from '../store/requestStore.js';
-import { useSocket } from '../hooks/useSocket.js';
+import { Boxes, ArrowLeftRight, Wrench, AlertCircle, Plus, CalendarClock } from 'lucide-react';
+import api from '../api/axios.js';
 import Card from '../components/ui/Card.jsx';
 import Button from '../components/ui/Button.jsx';
 import Loader from '../components/ui/Loader.jsx';
-import EmptyState from '../components/ui/EmptyState.jsx';
-import ItemCard from '../components/ItemCard.jsx';
-import StatusBadge from '../components/StatusBadge.jsx';
 
-/**
- * Logged-in user's hub: their own items (any status) + incoming/outgoing
- * requests with live status transitions. When a request is accepted elsewhere,
- * its badge flips here in real time via a refetch on the notification event.
- */
 export default function Dashboard() {
-  const { user } = useAuthStore();
-  const { incoming, outgoing, loading, fetchRequests, updateStatus } = useRequestStore();
-
-  const [myItems, setMyItems] = useState([]);
-  const [itemsLoading, setItemsLoading] = useState(true);
-  const [tab, setTab] = useState('incoming');
-
-  async function loadItems() {
-    setItemsLoading(true);
-    try {
-      const { data } = await api.get('/items', { params: { mine: true, limit: 50 } });
-      setMyItems(data.data.items);
-    } catch (err) {
-      toast.error(apiError(err));
-    } finally {
-      setItemsLoading(false);
-    }
-  }
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    available: 0,
+    allocated: 0,
+    maintenance: 0,
+    activeBookings: 0, // Placeholder
+    pendingTransfers: 0,
+    upcomingReturns: 0,
+  });
+  const [overdueAllocations, setOverdueAllocations] = useState([]);
+  const [recentActivity, setRecentActivity] = useState([]);
 
   useEffect(() => {
-    loadItems();
-    fetchRequests();
-  }, [fetchRequests]);
+    async function fetchDashboardData() {
+      try {
+        setLoading(true);
+        // Fetch data concurrently where possible
+        const [
+          { data: assetsRes },
+          { data: allocationsRes },
+          { data: maintenanceRes },
+          { data: transfersRes }
+        ] = await Promise.all([
+          api.get('/assets'),
+          api.get('/allocations'),
+          api.get('/maintenance'),
+          api.get('/transfers')
+        ]);
 
-  // Live: any notification (request transition, moderation) refreshes the
-  // relevant lists so the dashboard stays accurate without a manual reload.
-  useSocket('notification:new', () => {
-    fetchRequests();
-    loadItems();
-  });
+        const assets = assetsRes.data.assets || [];
+        const allocations = allocationsRes.data.allocations || [];
+        const maintenanceReqs = maintenanceRes.data.requests || [];
+        const transfers = transfersRes.data.transfers || [];
 
-  async function transition(id, status) {
-    try {
-      await updateStatus(id, status);
-      toast.success(`Request ${status}`);
-    } catch (err) {
-      toast.error(apiError(err));
+        // Compute KPIs
+        const available = assets.filter(a => a.status === 'Available').length;
+        const allocated = assets.filter(a => a.status === 'Allocated').length;
+        const maintenance = assets.filter(a => a.status === 'Under Maintenance').length;
+        
+        const pendingTransfers = transfers.filter(t => t.status === 'Pending').length;
+        
+        const now = new Date();
+        const activeAllocations = allocations.filter(a => a.status === 'active');
+        const upcomingReturns = activeAllocations.filter(a => {
+          if (!a.expectedReturnDate) return false;
+          const returnDate = new Date(a.expectedReturnDate);
+          return returnDate > now && (returnDate - now) < 7 * 24 * 60 * 60 * 1000; // Next 7 days
+        }).length;
+
+        const overdue = activeAllocations.filter(a => {
+          if (!a.expectedReturnDate) return false;
+          return new Date(a.expectedReturnDate) < now;
+        });
+
+        setStats({
+          available,
+          allocated,
+          maintenance,
+          activeBookings: 0, // Bookings not yet built
+          pendingTransfers,
+          upcomingReturns,
+        });
+
+        setOverdueAllocations(overdue);
+
+        // Build a mock recent activity list from allocations and maintenance
+        const activity = [];
+        allocations.slice(0, 3).forEach(a => {
+          activity.push({
+            id: `alloc-${a._id}`,
+            title: `Asset Allocated: ${a.asset?.name}`,
+            date: new Date(a.allocatedDate || a.createdAt),
+            type: 'allocation'
+          });
+        });
+        maintenanceReqs.slice(0, 3).forEach(m => {
+          activity.push({
+            id: `maint-${m._id}`,
+            title: `Maintenance Logged: ${m.asset?.name}`,
+            date: new Date(m.createdAt),
+            type: 'maintenance'
+          });
+        });
+        
+        activity.sort((a, b) => b.date - a.date);
+        setRecentActivity(activity.slice(0, 5));
+
+      } catch (err) {
+        console.error('Failed to load dashboard data', err);
+      } finally {
+        setLoading(false);
+      }
     }
+
+    fetchDashboardData();
+  }, []);
+
+  if (loading) {
+    return <Loader label="Loading dashboard..." />;
   }
 
   return (
     <div className="space-y-8">
-      {/* My items */}
-      <section>
-        <div className="mb-3 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-slate-900">My items</h1>
-          <Link to="/items/new">
-            <Button size="sm">
-              <Plus size={16} /> New item
-            </Button>
-          </Link>
-        </div>
-
-        {itemsLoading ? (
-          <Loader label="Loading your items…" />
-        ) : myItems.length === 0 ? (
-          <EmptyState
-            title="You haven't created anything yet"
-            hint="Create your first item — it'll appear here with its moderation status."
-            action={
-              <Link to="/items/new">
-                <Button size="sm">
-                  <Plus size={16} /> Create item
-                </Button>
-              </Link>
-            }
-          />
-        ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {myItems.map((item) => (
-              <ItemCard key={item._id} item={item} showStatus />
-            ))}
+      {/* Overdue Banner */}
+      {overdueAllocations.length > 0 && (
+        <div className="flex items-center gap-3 rounded-lg bg-red-50 p-4 text-red-700 border border-red-200">
+          <AlertCircle size={24} className="shrink-0" />
+          <div>
+            <h3 className="font-bold">Overdue Returns</h3>
+            <p className="text-sm">You have {overdueAllocations.length} asset(s) that are past their expected return date.</p>
           </div>
-        )}
+        </div>
+      )}
+
+      {/* KPI Cards */}
+      <section>
+        <h1 className="mb-4 text-2xl font-bold text-slate-900">Today's Overview</h1>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+          <KpiCard title="Available" value={stats.available} color="text-green-600" />
+          <KpiCard title="Allocated" value={stats.allocated} color="text-brand-600" />
+          <KpiCard title="Maintenance" value={stats.maintenance} color="text-orange-600" />
+          <KpiCard title="Active Bookings" value={stats.activeBookings} color="text-slate-600" />
+          <KpiCard title="Pending Transfers" value={stats.pendingTransfers} color="text-blue-600" />
+          <KpiCard title="Upcoming Returns" value={stats.upcomingReturns} color="text-purple-600" />
+        </div>
       </section>
 
-      {/* Requests */}
-      <section>
-        <h2 className="mb-3 text-xl font-bold text-slate-900">Requests</h2>
+      <div className="grid gap-8 lg:grid-cols-3">
+        {/* Quick Actions */}
+        <section className="lg:col-span-1">
+          <h2 className="mb-4 text-xl font-bold text-slate-900">Quick Actions</h2>
+          <div className="flex flex-col gap-3">
+            <Link to="/assets/register">
+              <Card className="flex items-center gap-3 hover:bg-slate-50 transition cursor-pointer">
+                <div className="rounded-full bg-brand-100 p-2 text-brand-600">
+                  <Plus size={20} />
+                </div>
+                <span className="font-medium">Register Asset</span>
+              </Card>
+            </Link>
+            <Link to="/booking">
+              <Card className="flex items-center gap-3 hover:bg-slate-50 transition cursor-pointer">
+                <div className="rounded-full bg-blue-100 p-2 text-blue-600">
+                  <CalendarClock size={20} />
+                </div>
+                <span className="font-medium">Book Resource</span>
+              </Card>
+            </Link>
+            <Link to="/maintenance">
+              <Card className="flex items-center gap-3 hover:bg-slate-50 transition cursor-pointer">
+                <div className="rounded-full bg-orange-100 p-2 text-orange-600">
+                  <Wrench size={20} />
+                </div>
+                <span className="font-medium">Raise Request</span>
+              </Card>
+            </Link>
+          </div>
+        </section>
 
-        <div className="mb-4 inline-flex rounded-lg border border-slate-200 bg-white p-1">
-          <TabButton active={tab === 'incoming'} onClick={() => setTab('incoming')}>
-            <Inbox size={15} /> Incoming ({incoming.length})
-          </TabButton>
-          <TabButton active={tab === 'outgoing'} onClick={() => setTab('outgoing')}>
-            <Send size={15} /> Outgoing ({outgoing.length})
-          </TabButton>
-        </div>
-
-        {loading ? (
-          <Loader label="Loading requests…" />
-        ) : (
-          <div className="space-y-3">
-            {(tab === 'incoming' ? incoming : outgoing).map((r) => (
-              <RequestRow
-                key={r._id}
-                request={r}
-                mine={tab}
-                userId={user._id}
-                onTransition={transition}
-              />
-            ))}
-            {(tab === 'incoming' ? incoming : outgoing).length === 0 && (
-              <EmptyState
-                title={`No ${tab} requests`}
-                hint={
-                  tab === 'incoming'
-                    ? 'Requests others send on your items show up here.'
-                    : 'Requests you send on other items show up here.'
-                }
-              />
+        {/* Recent Activity */}
+        <section className="lg:col-span-2">
+          <h2 className="mb-4 text-xl font-bold text-slate-900">Recent Activity</h2>
+          <Card className="min-h-[250px]">
+            {recentActivity.length === 0 ? (
+              <div className="flex h-full flex-col items-center justify-center text-slate-500 py-10">
+                <p>No recent activity found.</p>
+              </div>
+            ) : (
+              <ul className="divide-y divide-slate-100">
+                {recentActivity.map((act) => (
+                  <li key={act.id} className="py-3 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-full bg-slate-100 p-2 text-slate-500">
+                        {act.type === 'allocation' ? <ArrowLeftRight size={16} /> : <Wrench size={16} />}
+                      </div>
+                      <span className="font-medium text-slate-800">{act.title}</span>
+                    </div>
+                    <span className="text-sm text-slate-400">
+                      {act.date.toLocaleDateString()}
+                    </span>
+                  </li>
+                ))}
+              </ul>
             )}
-          </div>
-        )}
-      </section>
+          </Card>
+        </section>
+      </div>
     </div>
   );
 }
 
-function TabButton({ active, onClick, children }) {
+function KpiCard({ title, value, color }) {
   return (
-    <button
-      onClick={onClick}
-      className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition ${
-        active ? 'bg-brand-600 text-white' : 'text-slate-600 hover:bg-slate-100'
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
-
-/** One request with role-aware action buttons for legal transitions. */
-function RequestRow({ request, mine, onTransition }) {
-  const isIncoming = mine === 'incoming'; // I am the item owner
-  const { status } = request;
-
-  return (
-    <Card className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <Link to={`/items/${request.item?._id}`} className="font-medium text-slate-800 hover:underline">
-          {request.item?.title || 'Item'}
-        </Link>
-        <p className="text-sm text-slate-500">
-          {isIncoming ? `From ${request.fromUser?.name}` : `To ${request.toUser?.name}`}
-          {request.message ? ` — “${request.message}”` : ''}
-        </p>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <StatusBadge status={status} />
-
-        {/* Owner actions */}
-        {isIncoming && status === 'pending' && (
-          <>
-            <Button size="sm" variant="success" onClick={() => onTransition(request._id, 'accepted')}>
-              Accept
-            </Button>
-            <Button size="sm" variant="danger" onClick={() => onTransition(request._id, 'rejected')}>
-              Reject
-            </Button>
-          </>
-        )}
-
-        {/* Sender actions */}
-        {!isIncoming && status === 'pending' && (
-          <Button size="sm" variant="secondary" onClick={() => onTransition(request._id, 'cancelled')}>
-            Cancel
-          </Button>
-        )}
-
-        {/* Either party can complete an accepted request */}
-        {status === 'accepted' && (
-          <Button size="sm" onClick={() => onTransition(request._id, 'completed')}>
-            Mark completed
-          </Button>
-        )}
-      </div>
+    <Card className="flex flex-col items-center justify-center p-4 text-center">
+      <span className={`text-3xl font-bold ${color}`}>{value}</span>
+      <span className="mt-2 text-xs font-medium uppercase tracking-wide text-slate-500">
+        {title}
+      </span>
     </Card>
   );
 }
